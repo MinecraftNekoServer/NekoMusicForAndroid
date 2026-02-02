@@ -1,0 +1,7 @@
+# Default ignored files
+.idea
+.gradle
+build
+*.jks
+.kotlin
+app/build

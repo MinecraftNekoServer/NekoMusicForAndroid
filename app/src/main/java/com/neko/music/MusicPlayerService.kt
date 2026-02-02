@@ -1,0 +1,260 @@
+package com.neko.music
+
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.app.Service
+import android.content.Context
+import android.content.Intent
+import android.os.Build
+import android.os.IBinder
+import androidx.core.app.NotificationCompat
+import com.neko.music.service.MusicPlayerManager
+import kotlinx.coroutines.launch
+
+class MusicPlayerService : Service() {
+
+    private lateinit var playerManager: MusicPlayerManager
+    private val notificationManager by lazy {
+        getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+    }
+    private var isForeground = false
+
+    companion object {
+        private const val CHANNEL_ID = "music_player_channel"
+        private const val NOTIFICATION_ID = 1
+
+        fun startService(context: Context) {
+            val intent = Intent(context, MusicPlayerService::class.java)
+            context.startService(intent)
+        }
+    }
+
+    override fun onCreate() {
+        super.onCreate()
+        playerManager = MusicPlayerManager.getInstance(this)
+        createNotificationChannel()
+
+        // 确保 MediaSession 已初始化
+        playerManager.ensureMediaSessionInitialized(this)
+
+        // 启动前台服务以确保后台播放正常
+        startForeground(NOTIFICATION_ID, createMusicNotification())
+
+        // 监听定时关闭剩余时间变化
+        kotlinx.coroutines.GlobalScope.launch {
+            playerManager.sleepTimerRemainingSeconds.collect { remainingSeconds ->
+                updateMusicNotification()
+            }
+        }
+
+        // 监听播放状态变化
+        kotlinx.coroutines.GlobalScope.launch {
+            playerManager.isPlaying.collect { isPlaying ->
+                updateMusicNotification()
+                // 发送广播更新桌面组件
+                val updateIntent = Intent(this@MusicPlayerService, com.neko.music.widget.MusicWidgetProvider::class.java).apply {
+                    action = com.neko.music.widget.MusicWidgetProvider.ACTION_UPDATE_WIDGET
+                }
+                sendBroadcast(updateIntent)
+            }
+        }
+
+        // 监听当前音乐变化
+        kotlinx.coroutines.GlobalScope.launch {
+            playerManager.currentMusicTitle.collect {
+                updateMusicNotification()
+                // 发送广播更新桌面组件
+                val updateIntent = Intent(this@MusicPlayerService, com.neko.music.widget.MusicWidgetProvider::class.java).apply {
+                    action = com.neko.music.widget.MusicWidgetProvider.ACTION_UPDATE_WIDGET
+                }
+                sendBroadcast(updateIntent)
+            }
+        }
+
+        // 监听播放位置变化，实时更新进度条
+        kotlinx.coroutines.GlobalScope.launch {
+            playerManager.currentPosition.collect {
+                // 发送广播更新桌面组件
+                val updateIntent = Intent(this@MusicPlayerService, com.neko.music.widget.MusicWidgetProvider::class.java).apply {
+                    action = com.neko.music.widget.MusicWidgetProvider.ACTION_UPDATE_WIDGET
+                }
+                sendBroadcast(updateIntent)
+                
+                // 更新悬浮窗
+                val floatPrefs = getSharedPreferences("float_window", Context.MODE_PRIVATE)
+                if (floatPrefs.getBoolean("fuck_china_os_enabled", false)) {
+                    val floatUpdateIntent = Intent(this@MusicPlayerService, com.neko.music.floatwindow.FuckChinaOSFloatService::class.java).apply {
+                        action = com.neko.music.floatwindow.FuckChinaOSFloatService.ACTION_UPDATE
+                    }
+                    startService(floatUpdateIntent)
+                }
+            }
+        }
+    }
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        intent?.action?.let { action ->
+            when (action) {
+                "ACTION_PLAY" -> {
+                    if (!playerManager.isPlaying.value) {
+                        playerManager.togglePlayPause()
+                    }
+                }
+                "ACTION_PAUSE" -> {
+                    if (playerManager.isPlaying.value) {
+                        playerManager.pause()
+                    }
+                }
+                "ACTION_PREVIOUS" -> {
+                    playerManager.previous()
+                }
+                "ACTION_NEXT" -> {
+                    playerManager.next()
+                }
+            }
+        }
+        return START_STICKY
+    }
+
+    override fun onBind(intent: Intent?): IBinder? {
+        return null
+    }
+
+    private fun createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                CHANNEL_ID,
+                "音乐播放",
+                NotificationManager.IMPORTANCE_LOW
+            ).apply {
+                description = "音乐播放通知"
+                setShowBadge(false)
+            }
+
+            notificationManager.createNotificationChannel(channel)
+        }
+    }
+
+    private fun createMusicNotification(): Notification {
+        val title = playerManager.currentMusicTitle.value ?: "Neko云音乐"
+        val artist = playerManager.currentMusicArtist.value ?: ""
+        val isPlaying = playerManager.isPlaying.value
+        val remainingSeconds = playerManager.sleepTimerRemainingSeconds.value
+
+        // 创建点击通知打开应用的 PendingIntent
+        val notificationIntent = Intent(this, MainActivity::class.java)
+        notificationIntent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+
+        val pendingIntent = PendingIntent.getActivity(
+            this,
+            0,
+            notificationIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val contentText = if (remainingSeconds > 0) {
+            val hours = remainingSeconds / 3600
+            val minutes = (remainingSeconds % 3600) / 60
+            val seconds = remainingSeconds % 60
+
+            val timeText = buildString {
+                if (hours > 0) append("${hours}小时")
+                if (minutes > 0) append("${minutes}分钟")
+                append("${seconds}秒后关闭")
+            }
+
+            "$artist - $timeText"
+        } else {
+            artist
+        }
+
+        // 创建播放控制按钮的 PendingIntent
+        val playPauseIntent = Intent(this, MusicPlayerService::class.java).apply {
+            action = if (isPlaying) "ACTION_PAUSE" else "ACTION_PLAY"
+        }
+        val playPausePendingIntent = PendingIntent.getService(
+            this,
+            1,
+            playPauseIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val previousIntent = Intent(this, MusicPlayerService::class.java).apply {
+            action = "ACTION_PREVIOUS"
+        }
+        val previousPendingIntent = PendingIntent.getService(
+            this,
+            2,
+            previousIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val nextIntent = Intent(this, MusicPlayerService::class.java).apply {
+            action = "ACTION_NEXT"
+        }
+        val nextPendingIntent = PendingIntent.getService(
+            this,
+            3,
+            nextIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        // 获取 MediaSession Token
+        val mediaSessionToken = playerManager.getMediaSessionToken()
+
+        // 获取应用图标作为大图标
+        val largeIcon = try {
+            android.graphics.BitmapFactory.decodeResource(resources, R.mipmap.ic_launcher)
+        } catch (e: Exception) {
+            null
+        }
+
+        return NotificationCompat.Builder(this, CHANNEL_ID)
+            .setContentTitle(title)
+            .setContentText(contentText)
+            .setSmallIcon(R.mipmap.ic_launcher)
+            .setOngoing(false)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .setContentIntent(pendingIntent)
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .apply {
+                largeIcon?.let { setLargeIcon(it) }
+            }
+            // 添加 MediaStyle 以显示播放控制按钮
+            .setStyle(
+                androidx.media.app.NotificationCompat.MediaStyle()
+                    .setMediaSession(mediaSessionToken)
+                    .setShowActionsInCompactView(0, 1, 2) // 在紧凑视图显示所有按钮
+                    .setShowCancelButton(false)
+            )
+            // 添加播放控制按钮
+            .addAction(
+                android.R.drawable.ic_media_previous,
+                "上一首",
+                previousPendingIntent
+            )
+            .addAction(
+                if (isPlaying) android.R.drawable.ic_media_pause else android.R.drawable.ic_media_play,
+                if (isPlaying) "暂停" else "播放",
+                playPausePendingIntent
+            )
+            .addAction(
+                android.R.drawable.ic_media_next,
+                "下一首",
+                nextPendingIntent
+            )
+            .build()
+    }
+
+    fun updateMusicNotification() {
+        notificationManager.notify(NOTIFICATION_ID, createMusicNotification())
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        // 注意：不再释放 MusicPlayerManager，保持播放器始终活跃状态
+        // 释放已被禁用以防止 "Ignoring messages sent after release" 错误
+    }
+}
