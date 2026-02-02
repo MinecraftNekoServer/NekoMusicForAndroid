@@ -124,13 +124,20 @@ class MusicPlayerService : Service() {
 
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            // 先删除旧的通知频道
+            notificationManager.deleteNotificationChannel(CHANNEL_ID)
+
             val channel = NotificationChannel(
                 CHANNEL_ID,
                 "音乐播放",
-                NotificationManager.IMPORTANCE_LOW
+                NotificationManager.IMPORTANCE_DEFAULT
             ).apply {
                 description = "音乐播放通知"
                 setShowBadge(false)
+                enableVibration(false)
+                setSound(null, null)
+                enableLights(true)
+                lightColor = android.graphics.Color.BLUE
             }
 
             notificationManager.createNotificationChannel(channel)
@@ -204,24 +211,14 @@ class MusicPlayerService : Service() {
         // 获取 MediaSession Token
         val mediaSessionToken = playerManager.getMediaSessionToken()
 
-        // 获取应用图标作为大图标
-        val largeIcon = try {
-            android.graphics.BitmapFactory.decodeResource(resources, R.mipmap.ic_launcher)
-        } catch (e: Exception) {
-            null
-        }
-
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle(title)
             .setContentText(contentText)
-            .setSmallIcon(R.mipmap.ic_launcher)
+            .setSmallIcon(R.drawable.ic_notification)
             .setOngoing(false)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setContentIntent(pendingIntent)
-            .setPriority(NotificationCompat.PRIORITY_LOW)
-            .apply {
-                largeIcon?.let { setLargeIcon(it) }
-            }
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             // 添加 MediaStyle 以显示播放控制按钮
             .setStyle(
                 androidx.media.app.NotificationCompat.MediaStyle()
