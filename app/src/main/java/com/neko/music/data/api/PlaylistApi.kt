@@ -168,6 +168,17 @@ class PlaylistApi(private val token: String?, private val context: android.conte
         }
     }
 
+    suspend fun getPlaylistDetail(playlistId: Int): PlaylistResponse {
+        return try {
+            val response = client.get("https://music.cnmsb.xin/api/playlist/$playlistId")
+            Log.d("PlaylistApi", "获取歌单详情响应: ${response.body<String>()}")
+            response.body()
+        } catch (e: Exception) {
+            com.neko.music.util.AuthErrorHandler.handleApiError(context, e)
+            PlaylistResponse(false, "网络错误: ${e.message}", null)
+        }
+    }
+
     suspend fun addMusicToPlaylist(playlistId: Int, musicId: Int): PlaylistResponse {
         return try {
             val response = client.post("$baseUrl/music/add") {

@@ -38,6 +38,7 @@ import com.neko.music.R
 import com.neko.music.data.api.PlaylistApi
 import com.neko.music.data.api.PlaylistMusic
 import com.neko.music.data.api.PlaylistMusicListResponse
+import com.neko.music.data.api.PlaylistResponse
 import com.neko.music.data.manager.TokenManager
 import com.neko.music.ui.theme.RoseRed
 import kotlinx.coroutines.launch
@@ -63,6 +64,8 @@ fun PlaylistDetailScreen(
     var musicList by remember { mutableStateOf<List<PlaylistMusic>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
     var errorMessage by remember { mutableStateOf("") }
+    var actualCreatorUsername by remember { mutableStateOf<String?>(null) }
+    var actualCreatorUserId by remember { mutableStateOf<Int?>(null) }
     
     var currentDescription by remember { mutableStateOf(playlistDescription) }
     
@@ -73,13 +76,24 @@ fun PlaylistDetailScreen(
     LaunchedEffect(playlistId) {
         try {
             isLoading = true
-            val response: PlaylistMusicListResponse = playlistApi.getPlaylistMusic(playlistId)
-            Log.d("PlaylistDetailScreen", "加载歌单音乐: playlistId=$playlistId, success=${response.success}")
-            if (response.success) {
-                musicList = response.musicList ?: emptyList()
+            
+            // 先获取歌单详情（包含创建者信息）
+            val detailResponse: PlaylistResponse = playlistApi.getPlaylistDetail(playlistId)
+            Log.d("PlaylistDetailScreen", "歌单详情: playlist=${detailResponse.playlist}")
+            if (detailResponse.success && detailResponse.playlist != null) {
+                actualCreatorUsername = detailResponse.playlist.creator?.username
+                actualCreatorUserId = detailResponse.playlist.creator?.id ?: detailResponse.playlist.userId
+                Log.d("PlaylistDetailScreen", "创建者: username=$actualCreatorUsername, userId=$actualCreatorUserId")
+            }
+            
+            // 再获取歌单音乐列表
+            val musicResponse: PlaylistMusicListResponse = playlistApi.getPlaylistMusic(playlistId)
+            Log.d("PlaylistDetailScreen", "加载歌单音乐: playlistId=$playlistId, success=${musicResponse.success}")
+            if (musicResponse.success) {
+                musicList = musicResponse.musicList ?: emptyList()
                 Log.d("PlaylistDetailScreen", "加载到${musicList.size}首音乐")
             } else {
-                errorMessage = response.message
+                errorMessage = musicResponse.message
             }
         } catch (e: Exception) {
             Log.e("PlaylistDetailScreen", "加载歌单音乐失败", e)
@@ -323,21 +337,24 @@ fun PlaylistDetailScreen(
                     }
 
                     // 创建者信息
-                    if (creatorUsername != null && creatorUserId != null && creatorUserId != -1) {
+                    val displayCreatorUsername = actualCreatorUsername ?: creatorUsername
+                    val displayCreatorUserId = actualCreatorUserId ?: creatorUserId
+                    
+                    if (displayCreatorUserId != null && displayCreatorUserId != -1) {
                         Spacer(modifier = Modifier.height(8.dp))
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             AsyncImage(
-                                model = "https://music.cnmsb.xin/api/user/avatar/$creatorUserId",
+                                model = "https://music.cnmsb.xin/api/user/avatar/$displayCreatorUserId",
                                 contentDescription = "创建者头像",
                                 modifier = Modifier
                                     .size(20.dp)
                                     .clip(CircleShape)
                             )
                             Text(
-                                text = "创建者: $creatorUsername",
+                                text = if (displayCreatorUsername != null) "创建者: $displayCreatorUsername" else "创建者ID: $displayCreatorUserId",
                                 fontSize = 12.sp,
                                 color = if (isDarkTheme) {
                                     Color(0xFFB8B8D1).copy(alpha = 0.8f)
