@@ -71,6 +71,7 @@ fun MyPlaylistsScreen(
     
     // 歌单数据
     var playlists by remember { mutableStateOf<List<Playlist>>(emptyList()) }
+    var favoritePlaylists by remember { mutableStateOf<List<Playlist>>(emptyList()) }
     var favoritesCount by remember { mutableStateOf(0) }
     var favorites by remember { mutableStateOf<List<com.neko.music.data.api.FavoriteMusic>>(emptyList()) }
     var playlistFirstMusicCovers by remember { mutableStateOf<Map<Int, String>>(emptyMap()) } // 存储每个歌单第一首音乐的封面
@@ -131,6 +132,25 @@ fun MyPlaylistsScreen(
                         Log.d("MyPlaylistsScreen", "第一首音乐: id=${favorites[0].id}, title=${favorites[0].title}")
                     }
                 }
+
+                // 加载收藏歌单列表
+                val favoritePlaylistResponse = favoriteApi.getFavoritePlaylists(token)
+                Log.d("MyPlaylistsScreen", "收藏歌单API响应: success=${favoritePlaylistResponse.success}, 数量=${favoritePlaylistResponse.playlists.size}")
+                if (favoritePlaylistResponse.success) {
+                    favoritePlaylists = favoritePlaylistResponse.playlists.map { info ->
+                        Playlist(
+                            info.id,
+                            info.name,
+                            info.musicCount,
+                            1,
+                            java.text.SimpleDateFormat("yyyy-MM-dd").format(java.util.Date(info.createdAt)),
+                            null,
+                            info.description,
+                            info.creator?.username
+                        )
+                    }
+                    Log.d("MyPlaylistsScreen", "收藏歌单列表: ${favoritePlaylists.size}个")
+                }
             }
         } catch (e: Exception) {
             Log.e("MyPlaylistsScreen", "初始化失败", e)
@@ -183,6 +203,24 @@ fun MyPlaylistsScreen(
                     favoritesCount = favoriteResponse.favorites.size
                     favorites = favoriteResponse.favorites
                 }
+
+                // 加载收藏歌单列表
+                val favoritePlaylistResponse = favoriteApi.getFavoritePlaylists(token)
+                Log.d("MyPlaylistsScreen", "刷新收藏歌单API响应: success=${favoritePlaylistResponse.success}")
+                if (favoritePlaylistResponse.success) {
+                    favoritePlaylists = favoritePlaylistResponse.playlists.map { info ->
+                        Playlist(
+                            info.id,
+                            info.name,
+                            info.musicCount,
+                            1,
+                            java.text.SimpleDateFormat("yyyy-MM-dd").format(java.util.Date(info.createdAt)),
+                            null,
+                            info.description,
+                            info.creator?.username
+                        )
+                    }
+                }
             }
         } catch (e: Exception) {
             Log.e("MyPlaylistsScreen", "刷新失败", e)
@@ -193,11 +231,9 @@ fun MyPlaylistsScreen(
         }
     }
 
-    // 获取完整的歌单列表（包括"我的收藏"）
-    val allPlaylists = remember(playlists, favoritesCount) {
-        listOf(
-            Playlist(0, "我的收藏", favoritesCount, 1, "2026-01-15", null)
-        ) + playlists
+    // 获取完整的歌单列表（包括用户创建的歌单和收藏的歌单）
+    val allPlaylists = remember(playlists, favoritePlaylists) {
+        playlists + favoritePlaylists
     }
     
     // 创建/编辑歌单对话框

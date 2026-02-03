@@ -74,6 +74,22 @@ class FavoriteApi(private val context: android.content.Context) {
             FavoriteResponse(success = false, message = "网络错误: ${e.message}")
         }
     }
+
+    /**
+     * 获取收藏歌单列表
+     */
+    suspend fun getFavoritePlaylists(token: String): FavoritePlaylistListResponse {
+        return try {
+            val response = client.get("$baseUrl/api/user/favorite-playlists") {
+                header("Authorization", token)
+            }
+            response.body()
+        } catch (e: Exception) {
+            com.neko.music.util.AuthErrorHandler.handleApiError(context, e)
+            Log.e("FavoriteApi", "获取收藏歌单列表失败", e)
+            FavoritePlaylistListResponse(success = false, playlists = emptyList())
+        }
+    }
 }
 
 // 数据模型
@@ -103,4 +119,28 @@ data class FavoriteMusic(
     val duration: Int,
     val filename: String,
     val cover: String = ""
+)
+
+@Serializable
+data class FavoritePlaylistInfo(
+    val id: Int,
+    val name: String,
+    val description: String? = null,
+    val musicCount: Int,
+    val createdAt: Long,
+    val updatedAt: Long,
+    val favoriteTime: Long,
+    val creator: CreatorInfo? = null
+)
+
+@Serializable
+data class CreatorInfo(
+    val id: Int,
+    val username: String
+)
+
+@Serializable
+data class FavoritePlaylistListResponse(
+    val success: Boolean,
+    val playlists: List<FavoritePlaylistInfo>
 )
