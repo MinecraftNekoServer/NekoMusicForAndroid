@@ -578,7 +578,11 @@ fun PlayerScreen(
                 }
             },
             onCreatePlaylist = {
-                showCreateDialog = true
+                if (isLoggedIn) {
+                    showCreateDialog = true
+                } else {
+                    Toast.makeText(context, "请先登录", Toast.LENGTH_SHORT).show()
+                }
             }
         )
     }

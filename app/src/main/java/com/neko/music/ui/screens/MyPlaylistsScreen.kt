@@ -1,6 +1,7 @@
 package com.neko.music.ui.screens
 
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.animation.*
 import androidx.compose.foundation.Image
 import androidx.compose.animation.core.*
@@ -338,9 +339,13 @@ fun MyPlaylistsScreen(
                         )
                         Button(
                             onClick = {
-                                editingPlaylist = null
-                                dialogPlaylistName = ""
-                                showCreateDialog = true
+                                if (tokenManager.getToken() != null) {
+                                    editingPlaylist = null
+                                    dialogPlaylistName = ""
+                                    showCreateDialog = true
+                                } else {
+                                    Toast.makeText(context, "请先登录", Toast.LENGTH_SHORT).show()
+                                }
                             },
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = RoseRed
@@ -414,9 +419,14 @@ fun MyPlaylistsScreen(
                                 .fillMaxWidth()
                                 .height(80.dp)
                                 .clickable {
-                                    editingPlaylist = null
-                                    dialogPlaylistName = ""
-                                    showCreateDialog = true },
+                                    if (tokenManager.getToken() != null) {
+                                        editingPlaylist = null
+                                        dialogPlaylistName = ""
+                                        showCreateDialog = true
+                                    } else {
+                                        Toast.makeText(context, "请先登录", Toast.LENGTH_SHORT).show()
+                                    }
+                                },
                             colors = CardDefaults.cardColors(
                                 containerColor = if (isSystemInDarkTheme()) {
                                     Color(0xFF252545).copy(alpha = 0.7f)
