@@ -9,6 +9,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -130,6 +131,11 @@ fun MyPlaylistsScreen(
                     favorites = favoriteResponse.favorites
                     if (favorites.isNotEmpty()) {
                         Log.d("MyPlaylistsScreen", "第一首音乐: id=${favorites[0].id}, title=${favorites[0].title}")
+                        
+                        // 为"我喜欢的音乐"加载封面（使用第一首收藏音乐的封面）
+                        val firstFavorite = favorites[0]
+                        val coverUrl = "https://music.cnmsb.xin/api/music/cover/${firstFavorite.id}"
+                        playlistFirstMusicCovers = playlistFirstMusicCovers + (0 to coverUrl)
                     }
                 }
 
@@ -150,6 +156,25 @@ fun MyPlaylistsScreen(
                         )
                     }
                     Log.d("MyPlaylistsScreen", "收藏歌单列表: ${favoritePlaylists.size}个")
+
+                    // 异步加载每个收藏歌单的第一首音乐封面
+                    favoritePlaylists.forEach { playlist ->
+                        if (playlist.musicCount > 0) {
+                            scope.launch {
+                                try {
+                                    // 使用收藏歌单的API获取音乐列表
+                                    val musicResponse: PlaylistMusicListResponse = playlistApi.getPlaylistMusic(playlist.id)
+                                    if (musicResponse.success && musicResponse.musicList?.isNotEmpty() == true) {
+                                        val firstMusic = musicResponse.musicList[0]
+                                        val coverUrl = "https://music.cnmsb.xin/api/music/cover/${firstMusic.id}"
+                                        playlistFirstMusicCovers = playlistFirstMusicCovers + (playlist.id to coverUrl)
+                                    }
+                                } catch (e: Exception) {
+                                    Log.e("MyPlaylistsScreen", "加载收藏歌单${playlist.id}封面失败", e)
+                                }
+                            }
+                        }
+                    }
                 }
             }
         } catch (e: Exception) {
@@ -202,6 +227,13 @@ fun MyPlaylistsScreen(
                 if (favoriteResponse.success) {
                     favoritesCount = favoriteResponse.favorites.size
                     favorites = favoriteResponse.favorites
+                    
+                    // 为"我喜欢的音乐"加载封面（使用第一首收藏音乐的封面）
+                    if (favorites.isNotEmpty()) {
+                        val firstFavorite = favorites[0]
+                        val coverUrl = "https://music.cnmsb.xin/api/music/cover/${firstFavorite.id}"
+                        playlistFirstMusicCovers = playlistFirstMusicCovers + (0 to coverUrl)
+                    }
                 }
 
                 // 加载收藏歌单列表
@@ -220,6 +252,24 @@ fun MyPlaylistsScreen(
                             info.creator?.username
                         )
                     }
+
+                    // 异步加载每个收藏歌单的第一首音乐封面
+                    favoritePlaylists.forEach { playlist ->
+                        if (playlist.musicCount > 0) {
+                            scope.launch {
+                                try {
+                                    val musicResponse: PlaylistMusicListResponse = playlistApi.getPlaylistMusic(playlist.id)
+                                    if (musicResponse.success && musicResponse.musicList?.isNotEmpty() == true) {
+                                        val firstMusic = musicResponse.musicList[0]
+                                        val coverUrl = "https://music.cnmsb.xin/api/music/cover/${firstMusic.id}"
+                                        playlistFirstMusicCovers = playlistFirstMusicCovers + (playlist.id to coverUrl)
+                                    }
+                                } catch (e: Exception) {
+                                    Log.e("MyPlaylistsScreen", "加载收藏歌单${playlist.id}封面失败", e)
+                                }
+                            }
+                        }
+                    }
                 }
             }
         } catch (e: Exception) {
@@ -231,9 +281,11 @@ fun MyPlaylistsScreen(
         }
     }
 
-    // 获取完整的歌单列表（包括用户创建的歌单和收藏的歌单）
-    val allPlaylists = remember(playlists, favoritePlaylists) {
-        playlists + favoritePlaylists
+    // 获取完整的歌单列表
+    val allPlaylists = remember(playlists, favoritePlaylists, favoritesCount) {
+        listOf(
+            Playlist(0, "我喜欢的音乐", favoritesCount, 1, "2026-01-15", null, null, null)
+        ) + playlists + favoritePlaylists
     }
     
     // 创建/编辑歌单对话框
@@ -373,27 +425,6 @@ fun MyPlaylistsScreen(
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontWeight = FontWeight.Medium
                         )
-                        Button(
-                            onClick = {
-                                if (tokenManager.getToken() != null) {
-                                    editingPlaylist = null
-                                    dialogPlaylistName = ""
-                                    showCreateDialog = true
-                                } else {
-                                    Toast.makeText(context, "请先登录", Toast.LENGTH_SHORT).show()
-                                }
-                            },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = RoseRed
-                            ),
-                            shape = RoundedCornerShape(20.dp)
-                        ) {
-                            Text(
-                                text = "创建歌单",
-                                color = MaterialTheme.colorScheme.onPrimary,
-                                fontWeight = FontWeight.Medium
-                            )
-                        }
                     }
                 }
             } else {
@@ -418,7 +449,27 @@ fun MyPlaylistsScreen(
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                         contentPadding = PaddingValues(bottom = 150.dp)
                     ) {
-                    items(allPlaylists) { playlist ->
+                    itemsIndexed(allPlaylists) { index, playlist ->
+                        // 检查是否是第一个收藏歌单（"我喜欢的音乐"的索引是0，所以用户歌单从1开始）
+                        val isFirstFavoritePlaylist = index == playlists.size + 1 && favoritePlaylists.isNotEmpty()
+                        
+                        // 如果是第一个收藏歌单，先显示分割线
+                        if (isFirstFavoritePlaylist) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 8.dp)
+                                    .height(1.dp)
+                                    .background(
+                                        if (isSystemInDarkTheme()) {
+                                            Color.White.copy(alpha = 0.1f)
+                                        } else {
+                                            Color.Black.copy(alpha = 0.1f)
+                                        }
+                                    )
+                            )
+                        }
+                        
                         PlaylistItem(
                             playlist = playlist,
                             favorites = favorites,
