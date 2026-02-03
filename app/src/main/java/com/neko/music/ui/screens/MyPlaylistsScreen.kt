@@ -61,7 +61,7 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MyPlaylistsScreen(
-    onNavigateToPlaylistDetail: (Int, String, String?, String?) -> Unit,
+    onNavigateToPlaylistDetail: (Int, String, String?, String?, String?, Int?) -> Unit,
     onNavigateToFavorite: () -> Unit
 ) {
     val context = LocalContext.current
@@ -493,7 +493,14 @@ fun MyPlaylistsScreen(
                                     onNavigateToFavorite()
                                 } else {
                                     // 其他歌单跳转到歌单详情页面
-                                    onNavigateToPlaylistDetail(playlist.id, playlist.name, playlist.coverPath, playlist.description)
+                                    onNavigateToPlaylistDetail(
+                                        playlist.id,
+                                        playlist.name,
+                                        playlist.coverPath,
+                                        playlist.description,
+                                        playlist.username,
+                                        playlist.userId
+                                    )
                                 }
                             }
                         )

@@ -48,6 +48,8 @@ fun PlaylistDetailScreen(
     playlistName: String,
     playlistCover: String?,
     playlistDescription: String = "",
+    creatorUsername: String? = null,
+    creatorUserId: Int? = null,
     isOwner: Boolean = true,
     onBackClick: () -> Unit,
     onMusicClick: (com.neko.music.data.model.Music) -> Unit,
@@ -318,6 +320,32 @@ fun PlaylistDetailScreen(
                                 showEditDescriptionDialog = true
                             }
                         )
+                    }
+
+                    // 创建者信息
+                    if (creatorUsername != null && creatorUserId != null && creatorUserId != -1) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            AsyncImage(
+                                model = "https://music.cnmsb.xin/api/user/avatar/$creatorUserId",
+                                contentDescription = "创建者头像",
+                                modifier = Modifier
+                                    .size(20.dp)
+                                    .clip(CircleShape)
+                            )
+                            Text(
+                                text = "创建者: $creatorUsername",
+                                fontSize = 12.sp,
+                                color = if (isDarkTheme) {
+                                    Color(0xFFB8B8D1).copy(alpha = 0.8f)
+                                } else {
+                                    Color.Gray
+                                }
+                            )
+                        }
                     }
 
                     Spacer(modifier = Modifier.height(12.dp))

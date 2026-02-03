@@ -65,7 +65,7 @@ fun SearchResultScreen(
     initialQuery: String = "",
     onBackClick: () -> Unit,
     onMusicClick: (Music) -> Unit,
-    onPlaylistClick: (Int, String, String?, String?) -> Unit = { _, _, _, _ -> },
+    onPlaylistClick: (Int, String, String?, String?, String?, Int?) -> Unit = { _, _, _, _, _, _ -> },
     onArtistClick: (String, Int, String?) -> Unit = { _, _, _ -> }
 ) {
     val context = LocalContext.current
@@ -260,7 +260,7 @@ fun SearchResultScreen(
                         PlaylistList(
                             playlists = playlistResults,
                             onPlaylistClick = { playlist ->
-                                onPlaylistClick(playlist.id, playlist.name, playlist.coverPath, playlist.description)
+                                onPlaylistClick(playlist.id, playlist.name, playlist.coverPath, playlist.description, playlist.username, null)
                             }
                         )
                     } else {

@@ -378,11 +378,12 @@ fun MainScreen() {
             }
             composable(BottomNavItem.MyPlaylists.route) {
                 MyPlaylistsScreen(
-                    onNavigateToPlaylistDetail = { playlistId, playlistName, playlistCover, playlistDescription ->
+                    onNavigateToPlaylistDetail = { playlistId, playlistName, playlistCover, playlistDescription, creatorUsername, creatorUserId ->
                         val encodedName = java.net.URLEncoder.encode(playlistName, "UTF-8")
                         val encodedCover = if (playlistCover != null) java.net.URLEncoder.encode(playlistCover, "UTF-8") else "null"
                         val encodedDescription = java.net.URLEncoder.encode(playlistDescription ?: "", "UTF-8")
-                        navController.navigate("playlist_detail/$playlistId/$encodedName/$encodedCover/$encodedDescription/true")
+                        val encodedCreatorUsername = java.net.URLEncoder.encode(creatorUsername ?: "", "UTF-8")
+                        navController.navigate("playlist_detail/$playlistId/$encodedName/$encodedCover/$encodedDescription/$encodedCreatorUsername/${creatorUserId ?: -1}/true")
                     },
                     onNavigateToFavorite = {
                         navController.navigate("favorites")
@@ -418,7 +419,7 @@ fun MainScreen() {
                 )
             }
             composable(
-                route = "playlist_detail/{playlistId}/{playlistName}/{playlistCover}/{playlistDescription}/{isOwner}",
+                route = "playlist_detail/{playlistId}/{playlistName}/{playlistCover}/{playlistDescription}/{creatorUsername}/{creatorUserId}/{isOwner}",
                 arguments = listOf(
                     navArgument("playlistId") { type = NavType.IntType },
                     navArgument("playlistName") { type = NavType.StringType },
@@ -432,6 +433,15 @@ fun MainScreen() {
                         nullable = true
                         defaultValue = null
                     },
+                    navArgument("creatorUsername") {
+                        type = NavType.StringType
+                        nullable = true
+                        defaultValue = null
+                    },
+                    navArgument("creatorUserId") {
+                        type = NavType.IntType
+                        defaultValue = -1
+                    },
                     navArgument("isOwner") {
                         type = NavType.BoolType
                         defaultValue = true
@@ -442,6 +452,8 @@ fun MainScreen() {
                 val playlistName = backStackEntry.arguments?.getString("playlistName") ?: ""
                 val playlistCover = backStackEntry.arguments?.getString("playlistCover")
                 val playlistDescription = backStackEntry.arguments?.getString("playlistDescription")
+                val creatorUsername = backStackEntry.arguments?.getString("creatorUsername")
+                val creatorUserId = backStackEntry.arguments?.getInt("creatorUserId")
                 val isOwner = backStackEntry.arguments?.getBoolean("isOwner") ?: true
                 PlaylistDetailScreen(
                     playlistId = playlistId,
@@ -456,6 +468,8 @@ fun MainScreen() {
                     } else {
                         ""
                     },
+                    creatorUsername = creatorUsername,
+                    creatorUserId = if (creatorUserId == -1) null else creatorUserId,
                     isOwner = isOwner,
                     onBackClick = {
                         navController.popBackStack()
@@ -678,12 +692,13 @@ fun MainScreen() {
                             java.net.URLEncoder.encode(music.artist, "UTF-8")
                         navController.navigate("player/${music.id}/$encodedTitle/$encodedArtist")
                     },
-                    onPlaylistClick = { playlistId, playlistName, playlistCover, playlistDescription ->
+                    onPlaylistClick = { playlistId, playlistName, playlistCover, playlistDescription, creatorUsername, creatorUserId ->
                         Log.d("MainActivity", "点击歌单: $playlistName (ID: $playlistId)")
                         val encodedName = java.net.URLEncoder.encode(playlistName, "UTF-8")
                         val encodedCover = if (playlistCover != null) java.net.URLEncoder.encode(playlistCover, "UTF-8") else "null"
                         val encodedDescription = java.net.URLEncoder.encode(playlistDescription ?: "", "UTF-8")
-                        navController.navigate("playlist_detail/$playlistId/$encodedName/$encodedCover/$encodedDescription/false")
+                        val encodedCreatorUsername = java.net.URLEncoder.encode(creatorUsername ?: "", "UTF-8")
+                        navController.navigate("playlist_detail/$playlistId/$encodedName/$encodedCover/$encodedDescription/$encodedCreatorUsername/${creatorUserId ?: -1}/false")
                     },
                     onArtistClick = { artistName, musicCount, coverPath ->
                         Log.d("MainActivity", "点击歌手: $artistName")
