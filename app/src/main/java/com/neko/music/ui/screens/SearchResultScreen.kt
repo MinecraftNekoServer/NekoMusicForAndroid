@@ -260,7 +260,7 @@ fun SearchResultScreen(
                         PlaylistList(
                             playlists = playlistResults,
                             onPlaylistClick = { playlist ->
-                                onPlaylistClick(playlist.id, playlist.name, playlist.coverPath, playlist.description, playlist.username, null)
+                                onPlaylistClick(playlist.id, playlist.name, playlist.coverPath, playlist.description, playlist.username, playlist.userId)
                             }
                         )
                     } else {
@@ -723,13 +723,14 @@ suspend fun performPlaylistSearch(
                     // 简化处理：从 JSON 中提取歌单信息
                     val playlists = mutableListOf<com.neko.music.data.api.PlaylistInfo>()
                     // 匹配完整的歌单信息，包括 firstMusicId 和 firstMusicCover
-                    val playlistRegex = """"id":\s*(\d+),\s*"userId":\s*\d+,\s*"name":\s*"([^"]*)"(?:,\s*"description":\s*"([^"]*)")?,\s*"musicCount":\s*(\d+).*?,"firstMusicId":\s*(\d+)""".toRegex()
+                    val playlistRegex = """"id":\s*(\d+),\s*"userId":\s*(\d+),\s*"name":\s*"([^"]*)"(?:,\s*"description":\s*"([^"]*)")?,\s*"musicCount":\s*(\d+).*?,"firstMusicId":\s*(\d+)""".toRegex()
                     playlistRegex.findAll(resultsJson).forEach { matchResult ->
                         val id = matchResult.groupValues[1].toIntOrNull() ?: 0
-                        val name = matchResult.groupValues[2]
-                        val description = matchResult.groupValues[3].ifBlank { null }
-                        val musicCount = matchResult.groupValues[4].toIntOrNull() ?: 0
-                        val firstMusicId = matchResult.groupValues[5].toIntOrNull() ?: 0
+                        val userId = matchResult.groupValues[2].toIntOrNull() ?: 0
+                        val name = matchResult.groupValues[3]
+                        val description = matchResult.groupValues[4].ifBlank { null }
+                        val musicCount = matchResult.groupValues[5].toIntOrNull() ?: 0
+                        val firstMusicId = matchResult.groupValues[6].toIntOrNull() ?: 0
                         
                         playlists.add(
                             com.neko.music.data.api.PlaylistInfo(
@@ -739,7 +740,8 @@ suspend fun performPlaylistSearch(
                                 coverPath = "https://music.cnmsb.xin/api/music/cover/$firstMusicId",
                                 musicCount = musicCount,
                                 createdAt = "",
-                                updatedAt = ""
+                                updatedAt = "",
+                                userId = userId
                             )
                         )
                     }

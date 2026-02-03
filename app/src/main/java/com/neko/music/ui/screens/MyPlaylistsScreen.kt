@@ -92,12 +92,14 @@ fun MyPlaylistsScreen(
                 if (playlistResponse.success) {
                     // 转换PlaylistInfo到Playlist
                     playlists = playlistResponse.playlists?.map { info ->
-                        Log.d("MyPlaylistsScreen", "API返回歌单: id=${info.id}, name=${info.name}, coverPath=${info.coverPath}")
-                        Playlist(info.id, info.name, info.musicCount, 1, info.createdAt, info.coverPath, info.description, info.username)
+                        val creatorUserId = info.creator?.id ?: info.userId ?: 1
+                        val creatorUsername = info.creator?.username ?: info.username
+                        Log.d("MyPlaylistsScreen", "API返回歌单: id=${info.id}, name=${info.name}, userId=${info.userId}, creator=${info.creator}, creatorUsername=$creatorUsername")
+                        Playlist(info.id, info.name, info.musicCount, creatorUserId, info.createdAt, info.coverPath, info.description, creatorUsername)
                     } ?: emptyList()
                     Log.d("MyPlaylistsScreen", "歌单列表: ${playlists.size}个")
                     playlists.forEach { 
-                        Log.d("MyPlaylistsScreen", "转换后歌单: id=${it.id}, name=${it.name}, coverPath=${it.coverPath}")
+                        Log.d("MyPlaylistsScreen", "转换后歌单: id=${it.id}, name=${it.name}, userId=${it.userId}, username=${it.username}")
                     }
                     
                     // 异步加载每个歌单的第一首音乐封面（仅当歌单没有封面时）

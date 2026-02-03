@@ -34,8 +34,10 @@ data class PlaylistInfo(
     val musicCount: Int,
     val createdAt: String,
     val updatedAt: String,
+    val userId: Int? = null,
     val username: String? = null,
-    val creatorAvatar: String? = null
+    val creatorAvatar: String? = null,
+    val creator: CreatorInfo? = null
 )
 
 @Serializable
@@ -98,11 +100,14 @@ class PlaylistApi(private val token: String?, private val context: android.conte
 
     suspend fun getMyPlaylists(): PlaylistListResponse {
         return try {
-            client.get("https://music.cnmsb.xin/api/user/playlists") {
+            val response = client.get("https://music.cnmsb.xin/api/user/playlists") {
                 headers {
                     append("Authorization", token ?: "")
                 }
-            }.body()
+            }
+            val responseText = response.body<String>()
+            Log.d("PlaylistApi", "获取歌单列表响应: $responseText")
+            response.body()
         } catch (e: Exception) {
             com.neko.music.util.AuthErrorHandler.handleApiError(context, e)
             PlaylistListResponse(false, "网络错误: ${e.message}", null)
