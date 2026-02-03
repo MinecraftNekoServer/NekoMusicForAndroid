@@ -193,7 +193,7 @@ fun PlayerScreen(
     }
 
     // 登录提示
-    var showLoginToast by remember { mutableStateOf(false) }
+    
     val playModeChanged by playerManager.playModeChanged.collectAsState()
 
     // 分享对话框
@@ -397,7 +397,7 @@ fun PlayerScreen(
                     if (isLoggedIn) {
                         playerManager.toggleFavorite()
                     } else {
-                        showLoginToast = true
+                        Toast.makeText(context, "请先登录", Toast.LENGTH_SHORT).show()
                     }
                 },
                 showLyrics = showLyrics,
@@ -447,48 +447,6 @@ fun PlayerScreen(
                 PlayMode.SHUFFLE -> "随机播放"
             }
             Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    // 控制登录提示的显示
-    LaunchedEffect(showLoginToast) {
-        if (showLoginToast) {
-            delay(2000)
-            showLoginToast = false
-        }
-    }
-
-    // 登录提示（悬浮窗，层级最高）
-    AnimatedVisibility(
-        visible = showLoginToast,
-        enter = fadeIn(animationSpec = androidx.compose.animation.core.tween(300)),
-        exit = fadeOut(animationSpec = androidx.compose.animation.core.tween(300))
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp)
-                .padding(top = 80.dp)
-                .height(32.dp)
-                .background(
-                    if (isSystemInDarkTheme()) {
-                        Color.White.copy(alpha = 0.3f)
-                    } else {
-                        Color.Black.copy(alpha = 0.6f)
-                    },
-                    RoundedCornerShape(16.dp)
-                ),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "请先登录",
-                color = if (isSystemInDarkTheme()) {
-                    Color.White
-                } else {
-                    Color.White
-                },
-                fontSize = 14.sp
-            )
         }
     }
 
