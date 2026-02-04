@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.isSystemInDarkTheme
 import coil.compose.AsyncImage
 import com.neko.music.R
+import com.neko.music.data.api.FavoriteApi
 import com.neko.music.data.api.PlaylistApi
 import com.neko.music.data.api.PlaylistMusic
 import com.neko.music.data.api.PlaylistMusicListResponse
@@ -60,6 +61,7 @@ fun PlaylistDetailScreen(
     val scope = rememberCoroutineScope()
     val tokenManager = remember { TokenManager(context) }
     val playlistApi = remember { PlaylistApi(tokenManager.getToken(), context) }
+    val favoriteApi = remember { FavoriteApi(context) }
 
     var musicList by remember { mutableStateOf<List<PlaylistMusic>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
@@ -72,10 +74,14 @@ fun PlaylistDetailScreen(
     var showEditDescriptionDialog by remember { mutableStateOf(false) }
     var editingDescription by remember { mutableStateOf(playlistDescription) }
     var showShareDialog by remember { mutableStateOf(false) }
+    
+    var isFavorited by remember { mutableStateOf(false) }
+    var isCheckingFavorite by remember { mutableStateOf(true) }
 
     LaunchedEffect(playlistId) {
         try {
             isLoading = true
+            isCheckingFavorite = true
             
             // 先获取歌单详情（包含创建者信息）
             val detailResponse: PlaylistResponse = playlistApi.getPlaylistDetail(playlistId)
@@ -95,11 +101,21 @@ fun PlaylistDetailScreen(
             } else {
                 errorMessage = musicResponse.message
             }
+            
+            // 检查收藏状态（仅当不是自己的歌单时）
+            val currentUserId = tokenManager.getUserId()
+            if (currentUserId != -1 && actualCreatorUserId != currentUserId) {
+                val token = tokenManager.getToken()
+                if (token != null) {
+                    isFavorited = favoriteApi.isPlaylistFavorited(token, playlistId)
+                }
+            }
         } catch (e: Exception) {
             Log.e("PlaylistDetailScreen", "加载歌单音乐失败", e)
             errorMessage = "加载失败: ${e.message}"
         } finally {
             isLoading = false
+            isCheckingFavorite = false
         }
     }
 
@@ -117,6 +133,46 @@ fun PlaylistDetailScreen(
                 "https://music.cnmsb.xin/api/music/cover/${firstMusic.id}"
             } else {
                 "https://music.cnmsb.xin/api/user/avatar/default"
+            }
+        }
+    }
+
+    // 判断是否是自己的歌单
+    val isOwnPlaylist = tokenManager.getUserId() == actualCreatorUserId
+
+    // 收藏/取消收藏歌单的函数
+    val toggleFavorite: () -> Unit = {
+        scope.launch {
+            try {
+                val token = tokenManager.getToken()
+                if (token != null) {
+                    val response = if (isFavorited) {
+                        favoriteApi.removeFavoritePlaylist(token, playlistId)
+                    } else {
+                        favoriteApi.addFavoritePlaylist(token, playlistId)
+                    }
+                    
+                    if (response.success) {
+                        isFavorited = !isFavorited
+                        android.widget.Toast.makeText(
+                            context,
+                            if (isFavorited) "收藏成功" else "取消收藏成功",
+                            android.widget.Toast.LENGTH_SHORT
+                        ).show()
+                    } else {
+                        android.widget.Toast.makeText(
+                            context,
+                            response.message,
+                            android.widget.Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
+            } catch (e: Exception) {
+                android.widget.Toast.makeText(
+                    context,
+                    "操作失败: ${e.message}",
+                    android.widget.Toast.LENGTH_SHORT
+                ).show()
             }
         }
     }
@@ -231,11 +287,28 @@ fun PlaylistDetailScreen(
                     )
                 }
 
+                Row(
+                modifier = Modifier.align(Alignment.CenterEnd),
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                if (!isOwnPlaylist && !isCheckingFavorite) {
+                    IconButton(
+                        onClick = toggleFavorite,
+                        modifier = Modifier.size(48.dp)
+                    ) {
+                        Icon(
+                            painter = painterResource(
+                                id = if (isFavorited) R.drawable.ic_favorite_filled else R.drawable.ic_favorite_border
+                            ),
+                            contentDescription = if (isFavorited) "取消收藏" else "收藏",
+                            tint = RoseRed
+                        )
+                    }
+                }
+                
                 IconButton(
                     onClick = { showShareDialog = true },
-                    modifier = Modifier
-                        .size(48.dp)
-                        .align(Alignment.CenterEnd)
+                    modifier = Modifier.size(48.dp)
                 ) {
                     Icon(
                         imageVector = Icons.Default.Share,
@@ -243,6 +316,7 @@ fun PlaylistDetailScreen(
                         tint = Color.Black
                     )
                 }
+            }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
