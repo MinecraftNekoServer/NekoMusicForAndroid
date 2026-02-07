@@ -31,18 +31,19 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.neko.music.data.api.MusicApi
 import com.neko.music.data.model.Music
+import com.neko.music.service.MusicPlayerManager
 import com.neko.music.ui.theme.*
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RankingScreen(
-    onBackClick: () -> Unit = {},
-    onPlayAll: (List<Music>) -> Unit = {}
+    onBackClick: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val musicApi = remember { MusicApi(context) }
+    val playerManager = remember { MusicPlayerManager.getInstance(context) }
     val listState = rememberLazyListState()
     val isDarkMode = isSystemInDarkTheme()
     
@@ -124,7 +125,24 @@ fun RankingScreen(
                         TextButton(
                             onClick = { 
                                 Log.d("RankingScreen", "播放全部: ${musicList.size}首")
-                                onPlayAll(musicList)
+                                scope.launch {
+                                    try {
+                                        // 播放第一首，其他歌曲会在播放时自动添加到播放列表
+                                        val firstMusic = musicList[0]
+                                        val url = musicApi.getMusicFileUrl(firstMusic)
+                                        val fullCoverUrl = "https://music.cnmsb.xin/api/music/cover/${firstMusic.id}"
+                                        playerManager.playMusic(
+                                            url,
+                                            firstMusic.id,
+                                            firstMusic.title,
+                                            firstMusic.artist,
+                                            firstMusic.coverFilePath ?: "",
+                                            fullCoverUrl
+                                        )
+                                    } catch (e: Exception) {
+                                        Log.e("RankingScreen", "播放全部失败", e)
+                                    }
+                                }
                             }
                         ) {
                             Text(
@@ -199,7 +217,23 @@ fun RankingScreen(
                                 rank = index + 1,
                                 onClick = {
                                     Log.d("RankingScreen", "点击歌曲: ${music.title}")
-                                    // TODO: 播放音乐
+                                    scope.launch {
+                                        try {
+                                            // 播放当前点击的歌曲
+                                            val url = musicApi.getMusicFileUrl(music)
+                                            val fullCoverUrl = "https://music.cnmsb.xin/api/music/cover/${music.id}"
+                                            playerManager.playMusic(
+                                                url,
+                                                music.id,
+                                                music.title,
+                                                music.artist,
+                                                music.coverFilePath ?: "",
+                                                fullCoverUrl
+                                            )
+                                        } catch (e: Exception) {
+                                            Log.e("RankingScreen", "播放失败", e)
+                                        }
+                                    }
                                 }
                             )
                         }

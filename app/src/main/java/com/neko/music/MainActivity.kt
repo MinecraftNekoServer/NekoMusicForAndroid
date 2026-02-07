@@ -437,53 +437,6 @@ fun MainScreen() {
                 RankingScreen(
                     onBackClick = {
                         navController.popBackStack()
-                    },
-                    onPlayAll = { musicList ->
-                        Log.d("MainActivity", "播放全部排行榜: ${musicList.size}首")
-                        scope.launch {
-                            val playerManager = MusicPlayerManager.getInstance(context)
-                            val playlistManager = com.neko.music.data.manager.PlaylistManager.getInstance(context)
-                            
-                            // 清空当前播放列表
-                            playlistManager.clearPlaylist()
-                            
-                            // 将Music列表转换为播放列表
-                            musicList.forEach { music ->
-                                val musicToAdd = com.neko.music.data.model.Music(
-                                    id = music.id,
-                                    title = music.title,
-                                    artist = music.artist,
-                                    album = music.album ?: "",
-                                    duration = music.duration,
-                                    filePath = null,
-                                    coverFilePath = music.coverFilePath,
-                                    uploadUserId = null,
-                                    createdAt = null,
-                                    playCount = music.playCount
-                                )
-                                playlistManager.addToPlaylist(musicToAdd)
-                            }
-                            
-                            // 播放第一首
-                            if (musicList.isNotEmpty()) {
-                                val firstMusic = musicList[0]
-                                val fullCoverUrl = if (firstMusic.coverFilePath?.startsWith("/") == true) {
-                                    "https://music.cnmsb.xin${firstMusic.coverFilePath}"
-                                } else if (firstMusic.coverFilePath?.isNotEmpty() == true) {
-                                    firstMusic.coverFilePath
-                                } else {
-                                    "https://music.cnmsb.xin/api/music/cover/${firstMusic.id}"
-                                }
-                                playerManager.playMusic(
-                                    "https://music.cnmsb.xin/api/music/file/${firstMusic.id}",
-                                    firstMusic.id,
-                                    firstMusic.title,
-                                    firstMusic.artist,
-                                    firstMusic.coverFilePath ?: "",
-                                    fullCoverUrl
-                                )
-                            }
-                        }
                     }
                 )
             }
