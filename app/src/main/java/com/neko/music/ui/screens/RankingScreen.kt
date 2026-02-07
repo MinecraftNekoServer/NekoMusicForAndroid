@@ -390,7 +390,7 @@ fun RankingItem(
                         text = music.title,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = Color.White.copy(alpha = 0.95f),
+                        color = RoseRed.copy(alpha = 0.9f),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -398,7 +398,7 @@ fun RankingItem(
                     Text(
                         text = music.artist,
                         fontSize = 12.sp,
-                        color = RoseRed.copy(alpha = 0.65f),
+                        color = RoseRed.copy(alpha = 0.6f),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
