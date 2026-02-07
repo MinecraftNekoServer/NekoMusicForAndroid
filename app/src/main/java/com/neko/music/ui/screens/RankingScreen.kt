@@ -8,10 +8,11 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.Icons
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -43,6 +44,7 @@ fun RankingScreen(
     val scope = rememberCoroutineScope()
     val musicApi = remember { MusicApi(context) }
     val listState = rememberLazyListState()
+    val isDarkMode = isSystemInDarkTheme()
     
     var musicList by remember { mutableStateOf<List<Music>>(emptyList()) }
     var loading by remember { mutableStateOf(true) }
@@ -105,7 +107,7 @@ fun RankingScreen(
                         text = "热门音乐",
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
-                        color = RoseRed
+                        color = if (isDarkMode) Color.White.copy(alpha = 0.95f) else RoseRed
                     )
                 },
                 navigationIcon = {
@@ -113,7 +115,7 @@ fun RankingScreen(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "返回",
-                            tint = RoseRed
+                            tint = if (isDarkMode) Color.White.copy(alpha = 0.9f) else RoseRed
                         )
                     }
                 },
@@ -129,31 +131,22 @@ fun RankingScreen(
                                 text = "播放全部",
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Medium,
-                                color = RoseRed
+                                color = if (isDarkMode) Color.White.copy(alpha = 0.9f) else RoseRed
                             )
                         }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Transparent
+                    containerColor = if (isDarkMode) DeepBlue else Color.Transparent
                 )
             )
         },
-        containerColor = Color.Transparent
+        containerColor = if (isDarkMode) DeepBlue else Color.Transparent
     ) { paddingValues ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .background(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(
-                            SakuraPink.copy(alpha = 0.12f),
-                            SkyBlue.copy(alpha = 0.08f),
-                            Lilac.copy(alpha = 0.05f)
-                        )
-                    )
-                )
         ) {
             when {
                 loading && musicList.isEmpty() -> {
@@ -170,7 +163,25 @@ fun RankingScreen(
                 else -> {
                     LazyColumn(
                         state = listState,
-                        modifier = Modifier.fillMaxSize(),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(
+                                brush = Brush.verticalGradient(
+                                    colors = if (isDarkMode) {
+                                        listOf(
+                                            DeepBlue.copy(alpha = 0.3f),
+                                            DeepBlue.copy(alpha = 0.2f),
+                                            DeepBlue.copy(alpha = 0.1f)
+                                        )
+                                    } else {
+                                        listOf(
+                                            SakuraPink.copy(alpha = 0.12f),
+                                            SkyBlue.copy(alpha = 0.08f),
+                                            Lilac.copy(alpha = 0.05f)
+                                        )
+                                    }
+                                )
+                            ),
                         contentPadding = PaddingValues(
                             start = 16.dp,
                             end = 16.dp,
@@ -201,8 +212,27 @@ fun RankingScreen(
 
 @Composable
 fun LoadingState() {
+    val isDarkMode = isSystemInDarkTheme()
     Column(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = if (isDarkMode) {
+                        listOf(
+                            DeepBlue.copy(alpha = 0.3f),
+                            DeepBlue.copy(alpha = 0.2f),
+                            DeepBlue.copy(alpha = 0.1f)
+                        )
+                    } else {
+                        listOf(
+                            SakuraPink.copy(alpha = 0.12f),
+                            SkyBlue.copy(alpha = 0.08f),
+                            Lilac.copy(alpha = 0.05f)
+                        )
+                    }
+                )
+            ),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
@@ -214,7 +244,7 @@ fun LoadingState() {
         Text(
             text = "正在加载热门音乐...",
             fontSize = 14.sp,
-            color = RoseRed.copy(alpha = 0.7f)
+            color = if (isDarkMode) Color.White.copy(alpha = 0.7f) else RoseRed.copy(alpha = 0.7f)
         )
     }
 }
@@ -223,8 +253,27 @@ fun LoadingState() {
 fun ErrorState(
     onRetry: () -> Unit
 ) {
+    val isDarkMode = isSystemInDarkTheme()
     Column(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = if (isDarkMode) {
+                        listOf(
+                            DeepBlue.copy(alpha = 0.3f),
+                            DeepBlue.copy(alpha = 0.2f),
+                            DeepBlue.copy(alpha = 0.1f)
+                        )
+                    } else {
+                        listOf(
+                            SakuraPink.copy(alpha = 0.12f),
+                            SkyBlue.copy(alpha = 0.08f),
+                            Lilac.copy(alpha = 0.05f)
+                        )
+                    }
+                )
+            ),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
@@ -232,13 +281,13 @@ fun ErrorState(
             text = "加载失败",
             fontSize = 18.sp,
             fontWeight = FontWeight.Medium,
-            color = RoseRed
+            color = if (isDarkMode) Color.White.copy(alpha = 0.95f) else RoseRed
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = "网络连接似乎出现了问题",
             fontSize = 14.sp,
-            color = RoseRed.copy(alpha = 0.6f)
+            color = if (isDarkMode) Color.White.copy(alpha = 0.6f) else RoseRed.copy(alpha = 0.6f)
         )
         Spacer(modifier = Modifier.height(20.dp))
         Button(
@@ -248,11 +297,10 @@ fun ErrorState(
             ),
             shape = RoundedCornerShape(20.dp)
         ) {
-
-            Spacer(modifier = Modifier.width(8.dp))
             Text(
                 text = "重试",
-                fontSize = 14.sp
+                fontSize = 14.sp,
+                color = Color.White
             )
         }
     }
@@ -260,15 +308,34 @@ fun ErrorState(
 
 @Composable
 fun EmptyState() {
+    val isDarkMode = isSystemInDarkTheme()
     Column(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = if (isDarkMode) {
+                        listOf(
+                            DeepBlue.copy(alpha = 0.3f),
+                            DeepBlue.copy(alpha = 0.2f),
+                            DeepBlue.copy(alpha = 0.1f)
+                        )
+                    } else {
+                        listOf(
+                            SakuraPink.copy(alpha = 0.12f),
+                            SkyBlue.copy(alpha = 0.08f),
+                            Lilac.copy(alpha = 0.05f)
+                        )
+                    }
+                )
+            ),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
         Text(
             text = "暂无热门音乐",
             fontSize = 16.sp,
-            color = RoseRed.copy(alpha = 0.6f)
+            color = if (isDarkMode) Color.White.copy(alpha = 0.6f) else RoseRed.copy(alpha = 0.6f)
         )
     }
 }
@@ -281,6 +348,7 @@ fun RankingItem(
 ) {
     val context = LocalContext.current
     val musicApi = remember { MusicApi(context) }
+    val isDarkMode = isSystemInDarkTheme()
     var coverUrl by remember { mutableStateOf<String?>(null) }
     var isLoaded by remember { mutableStateOf(false) }
     
@@ -298,16 +366,30 @@ fun RankingItem(
     
     val backgroundColor = when {
         rank <= 3 -> Brush.horizontalGradient(
-            colors = listOf(
-                RoseRed.copy(alpha = 0.15f),
-                SakuraPink.copy(alpha = 0.1f)
-            )
+            colors = if (isDarkMode) {
+                listOf(
+                    RoseRed.copy(alpha = 0.25f),
+                    RoseRed.copy(alpha = 0.15f)
+                )
+            } else {
+                listOf(
+                    RoseRed.copy(alpha = 0.15f),
+                    SakuraPink.copy(alpha = 0.1f)
+                )
+            }
         )
         else -> Brush.horizontalGradient(
-            colors = listOf(
-                RoseRed.copy(alpha = 0.08f),
-                Color.Transparent
-            )
+            colors = if (isDarkMode) {
+                listOf(
+                    RoseRed.copy(alpha = 0.12f),
+                    Color.Transparent
+                )
+            } else {
+                listOf(
+                    RoseRed.copy(alpha = 0.08f),
+                    Color.Transparent
+                )
+            }
         )
     }
     
@@ -390,7 +472,7 @@ fun RankingItem(
                         text = music.title,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = RoseRed.copy(alpha = 0.9f),
+                        color = if (isDarkMode) Color.White.copy(alpha = 0.95f) else RoseRed.copy(alpha = 0.9f),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -398,7 +480,7 @@ fun RankingItem(
                     Text(
                         text = music.artist,
                         fontSize = 12.sp,
-                        color = RoseRed.copy(alpha = 0.6f),
+                        color = if (isDarkMode) Color.White.copy(alpha = 0.6f) else RoseRed.copy(alpha = 0.6f),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -408,7 +490,7 @@ fun RankingItem(
                     Text(
                         text = formatPlayCount(music.playCount),
                         fontSize = 11.sp,
-                        color = RoseRed.copy(alpha = 0.7f),
+                        color = if (isDarkMode) Color.White.copy(alpha = 0.5f) else RoseRed.copy(alpha = 0.7f),
                         fontWeight = FontWeight.Medium
                     )
                 }
