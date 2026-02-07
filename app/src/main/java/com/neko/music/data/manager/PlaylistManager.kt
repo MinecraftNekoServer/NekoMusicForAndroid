@@ -58,6 +58,7 @@ class PlaylistManager private constructor(context: Context) {
         "music-playlist-db"
     )
         .addMigrations(MIGRATION_1_2)
+        .fallbackToDestructiveMigration()
         .build()
     
     private val dao = database.playlistDao()

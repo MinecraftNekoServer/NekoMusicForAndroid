@@ -9,10 +9,11 @@ data class Music(
     val artist: String,
     val album: String,
     val duration: Int,
-    val filePath: String,
-    val coverFilePath: String?,
-    val uploadUserId: Int,
-    val createdAt: String
+    val filePath: String? = null,
+    val coverFilePath: String? = null,
+    val uploadUserId: Int? = null,
+    val createdAt: String? = null,
+    val playCount: Int? = null
 ) {
     val coverUrl: String
         get() = if (coverFilePath.isNullOrEmpty()) {

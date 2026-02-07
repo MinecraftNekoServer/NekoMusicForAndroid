@@ -35,22 +35,60 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.view.WindowCompat
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.ui.platform.LocalContext
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.neko.music.R
+import com.neko.music.data.api.PlaylistApi
+import com.neko.music.data.api.PlaylistInfo
 import com.neko.music.data.manager.AppUpdateManager
 import com.neko.music.data.manager.UpdateInfo
+import com.neko.music.data.model.Music
 import com.neko.music.ui.theme.*
 import kotlinx.coroutines.launch
 
 @Composable
 fun HomeScreen(
     onSearchClick: () -> Unit = {},
-    onNavigateToFavorite: () -> Unit = {}
+    onNavigateToFavorite: () -> Unit = {},
+    onNavigateToPlaylist: (Int) -> Unit = {},
+    onNavigateToRanking: () -> Unit = {}
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
     val scope = rememberCoroutineScope()
     val updateManager = remember { AppUpdateManager(context) }
     val toastMessage = remember { androidx.compose.runtime.mutableStateOf("") }
     val showToast = remember { androidx.compose.runtime.mutableStateOf(false) }
+    
+    // 热门音乐状态
+    var recommendedMusic by remember { mutableStateOf<List<com.neko.music.data.model.Music>>(emptyList()) }
+    var playlistsLoading by remember { mutableStateOf(false) }
+    var loadError by remember { mutableStateOf(false) }
+    
+    // 获取热门音乐
+    LaunchedEffect(Unit) {
+        playlistsLoading = true
+        loadError = false
+        scope.launch {
+            try {
+                Log.d("HomeScreen", "开始加载热门音乐...")
+                val musicApi = com.neko.music.data.api.MusicApi(context)
+                val result = musicApi.getRanking(8)
+                result.onSuccess { musicList ->
+                    recommendedMusic = musicList
+                    Log.d("HomeScreen", "热门音乐加载成功: ${musicList.size}首")
+                }.onFailure { error ->
+                    Log.e("HomeScreen", "热门音乐加载失败: ${error.message}")
+                    loadError = true
+                }
+            } catch (e: Exception) {
+                Log.e("HomeScreen", "热门音乐异常: ${e.message}", e)
+                loadError = true
+            } finally {
+                playlistsLoading = false
+            }
+        }
+    }
     
     // 更新状态
     var updateInfo by remember { mutableStateOf<UpdateInfo?>(null) }
@@ -254,6 +292,68 @@ fun HomeScreen(
                 
                 // 顶部横幅
                 WelcomeBanner()
+                
+                // 推荐歌单
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp, vertical = 8.dp)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 4.dp, vertical = 12.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "推荐歌单",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = RoseRed.copy(alpha = 0.8f)
+                        )
+                        if (playlistsLoading) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                color = RoseRed.copy(alpha = 0.8f),
+                                strokeWidth = 2.dp
+                            )
+                        }
+                    }
+                    
+                    if (playlistsLoading) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(160.dp)
+                        ) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.align(Alignment.Center),
+                                color = Color.White
+                            )
+                        }
+                    } else if (loadError) {
+                        Text(
+                            text = "网络错误",
+                            fontSize = 14.sp,
+                            color = Color.White.copy(alpha = 0.6f),
+                            modifier = Modifier.padding(vertical = 40.dp)
+                        )
+                    } else {
+                        LazyRow(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            items(recommendedMusic.withIndex().toList()) { (index, music) ->
+                                MusicCard(
+                                    music = music,
+                                    rank = index + 1,
+                                    onClick = { onNavigateToRanking() }
+                                )
+                            }
+                        }
+                    }
+                }
                 
                 Spacer(modifier = Modifier.height(80.dp))
             }
@@ -857,6 +957,367 @@ fun UpdateErrorDialog(
                         )
                     }
                 }
+            }
+        }
+    }
+
+    @Composable
+    fun PlaylistCard(
+        playlist: PlaylistInfo,
+        onClick: () -> Unit
+    ) {
+        var isPressed by remember { mutableStateOf(false) }
+        val scale by animateFloatAsState(
+            targetValue = if (isPressed) 0.95f else 1f,
+            animationSpec = spring(
+                dampingRatio = Spring.DampingRatioMediumBouncy,
+                stiffness = Spring.StiffnessLow
+            )
+        )
+
+        Column(
+            modifier = Modifier
+                .width(160.dp)
+                .scale(scale)
+                .clickable {
+                    isPressed = true
+                    onClick()
+                },
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            // 封面
+            Box(
+                modifier = Modifier
+                    .size(160.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                SakuraPink.copy(alpha = 0.3f),
+                                SkyBlue.copy(alpha = 0.3f)
+                            )
+                        )
+                    )
+                    .shadow(
+                        elevation = 4.dp,
+                        spotColor = RoseRed.copy(alpha = 0.2f),
+                        ambientColor = Color.Gray.copy(alpha = 0.1f)
+                    )
+            ) {
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(
+                            when {
+                                !playlist.firstMusicCover.isNullOrEmpty() -> playlist.firstMusicCover
+                                !playlist.coverPath.isNullOrEmpty() -> playlist.coverPath
+                                else -> "https://music.cnmsb.xin/api/user/avatar/default"
+                            }
+                        )
+                        .crossfade(true)
+                        .build(),
+                    contentDescription = playlist.name,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+
+                // 音乐数量标签
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomStart)
+                        .padding(8.dp)
+                        .background(
+                            color = Color.Black.copy(alpha = 0.6f),
+                            shape = RoundedCornerShape(12.dp)
+                        )
+                        .padding(horizontal = 10.dp, vertical = 4.dp)
+                ) {
+                    Text(
+                        text = "${playlist.musicCount}首",
+                        fontSize = 12.sp,
+                        color = Color.White,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // 歌单名称
+            Text(
+                text = playlist.name,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Medium,
+                color = Color.White.copy(alpha = 0.95f),
+                maxLines = 1,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+            )
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            // 歌单描述
+            Text(
+                text = playlist.description ?: "暂无描述",
+                fontSize = 12.sp,
+                color = Color.White.copy(alpha = 0.65f),
+                maxLines = 1,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+            )
+        }
+    }
+}
+
+@Composable
+fun MusicCard(
+    music: com.neko.music.data.model.Music,
+    rank: Int = 0,
+    onClick: () -> Unit
+) {
+    var isPressed by remember { mutableStateOf(false) }
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.95f else 1f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        )
+    )
+
+    val context = LocalContext.current
+    val musicApi = remember { com.neko.music.data.api.MusicApi(context) }
+    var coverUrl by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(music.id) {
+        coverUrl = musicApi.getMusicCoverUrl(music)
+    }
+
+    Column(
+        modifier = Modifier
+            .width(160.dp)
+            .scale(scale)
+            .clickable {
+                isPressed = true
+                onClick()
+            },
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        // 封面
+        Box(
+            modifier = Modifier
+                .size(160.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            SakuraPink.copy(alpha = 0.3f),
+                            SkyBlue.copy(alpha = 0.3f)
+                        )
+                    )
+                )
+                .shadow(
+                    elevation = 4.dp,
+                    spotColor = RoseRed.copy(alpha = 0.2f),
+                    ambientColor = Color.Gray.copy(alpha = 0.1f)
+                )
+        ) {
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(coverUrl ?: "https://music.cnmsb.xin/api/user/avatar/default")
+                    .crossfade(true)
+                    .build(),
+                contentDescription = music.title,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
+            )
+
+            // 排名徽章
+            if (rank > 0) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .padding(8.dp)
+                        .background(
+                            color = when (rank) {
+                                1 -> Color(0xFFFFD700)
+                                2 -> Color(0xFFC0C0C0)
+                                3 -> Color(0xFFCD7F32)
+                                else -> Color.Black.copy(alpha = 0.6f)
+                            },
+                            shape = RoundedCornerShape(12.dp)
+                        )
+                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                ) {
+                    Text(
+                        text = "$rank",
+                        fontSize = 12.sp,
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+
+            // 播放次数标签
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(8.dp)
+                    .background(
+                        color = Color.Black.copy(alpha = 0.6f),
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                    .padding(horizontal = 10.dp, vertical = 4.dp)
+            ) {
+                Text(
+                    text = "${music.playCount ?: 0}次",
+                    fontSize = 12.sp,
+                    color = Color.White,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        // 歌曲名称
+        Text(
+            text = music.title,
+            fontSize = 15.sp,
+            fontWeight = FontWeight.Medium,
+            color = Color.White.copy(alpha = 0.95f),
+            maxLines = 1,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+        )
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        // 歌手
+        Text(
+            text = music.artist,
+            fontSize = 12.sp,
+            color = Color.White.copy(alpha = 0.65f),
+            maxLines = 1,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+        )
+    }
+}
+
+@Composable
+fun RankingCard(
+    musicList: List<com.neko.music.data.model.Music>,
+    onClick: () -> Unit
+) {
+    var isPressed by remember { mutableStateOf(false) }
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.98f else 1f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        )
+    )
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .scale(scale)
+            .clip(RoundedCornerShape(16.dp))
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        RoseRed.copy(alpha = 0.15f),
+                        SakuraPink.copy(alpha = 0.1f)
+                    )
+                )
+            )
+            .clickable {
+                isPressed = true
+                onClick()
+            }
+            .padding(16.dp)
+    ) {
+        // 显示前3首热门音乐
+        musicList.take(3).forEachIndexed { index, music ->
+            if (index > 0) {
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // 排名
+                Text(
+                    text = "${index + 1}",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = when (index) {
+                        0 -> Color(0xFFFFD700) // 金色
+                        1 -> Color(0xFFC0C0C0) // 银色
+                        2 -> Color(0xFFCD7F32) // 铜色
+                        else -> Color.White
+                    },
+                    modifier = Modifier.width(30.dp)
+                )
+                
+                Spacer(modifier = Modifier.width(12.dp))
+                
+                // 封面
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data("https://music.cnmsb.xin/api/music/cover/${music.id}")
+                        .crossfade(true)
+                        .build(),
+                    contentDescription = music.title,
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(RoundedCornerShape(8.dp)),
+                    contentScale = ContentScale.Crop
+                )
+                
+                Spacer(modifier = Modifier.width(12.dp))
+                
+                // 歌曲信息
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(
+                        text = music.title,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = Color.White.copy(alpha = 0.95f),
+                        maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = music.artist,
+                        fontSize = 12.sp,
+                        color = Color.White.copy(alpha = 0.65f),
+                        maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                    )
+                }
+                
+                // 播放次数
+                Text(
+                    text = "${music.playCount ?: 0}次",
+                    fontSize = 12.sp,
+                    color = RoseRed.copy(alpha = 0.8f),
+                    fontWeight = FontWeight.Medium
+                )
+            }
+        }
+        
+        // 显示总数
+        if (musicList.size > 3) {
+            Spacer(modifier = Modifier.height(12.dp))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = "共 ${musicList.size} 首热门音乐",
+                    fontSize = 12.sp,
+                    color = Color.White.copy(alpha = 0.5f)
+                )
             }
         }
     }

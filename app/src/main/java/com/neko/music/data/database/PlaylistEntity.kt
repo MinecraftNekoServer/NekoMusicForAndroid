@@ -12,9 +12,9 @@ data class PlaylistEntity(
     val artist: String,
     val album: String,
     val duration: Int,
-    val filePath: String,
+    val filePath: String?,
     val coverFilePath: String,
-    val uploadUserId: Int,
-    val createdAt: String,
+    val uploadUserId: Int?,
+    val createdAt: String?,
     val addedAt: Long = System.currentTimeMillis()
 )

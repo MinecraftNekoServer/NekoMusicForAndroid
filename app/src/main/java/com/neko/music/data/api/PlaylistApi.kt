@@ -15,7 +15,8 @@ import kotlinx.serialization.json.Json
 data class PlaylistListResponse(
     val success: Boolean,
     val message: String = "",
-    val playlists: List<PlaylistInfo>? = null
+    val playlists: List<PlaylistInfo>? = null,
+    val results: List<PlaylistInfo>? = null
 )
 
 @Serializable
@@ -37,7 +38,8 @@ data class PlaylistInfo(
     val userId: Int? = null,
     val username: String? = null,
     val creatorAvatar: String? = null,
-    val creator: CreatorInfo? = null
+    val creator: CreatorInfo? = null,
+    val firstMusicCover: String? = null
 )
 
 @Serializable
@@ -97,6 +99,28 @@ class PlaylistApi(private val token: String?, private val context: android.conte
     }
 
     private val baseUrl = "https://music.cnmsb.xin/api/user/playlist"
+
+    suspend fun searchPlaylists(): PlaylistListResponse {
+        return try {
+            val response = client.post("https://music.cnmsb.xin/api/playlists/search") {
+                contentType(ContentType.Application.Json)
+                setBody("""{"query":"歌单"}""")
+            }
+            val responseText = response.body<String>()
+            Log.d("PlaylistApi", "搜索歌单响应: $responseText")
+            val responseBody = response.body<PlaylistListResponse>()
+            // 将results字段转换为playlists字段
+            return PlaylistListResponse(
+                success = responseBody.success,
+                message = responseBody.message,
+                playlists = responseBody.results,
+                results = null
+            )
+        } catch (e: Exception) {
+            Log.e("PlaylistApi", "搜索歌单异常: ${e.message}", e)
+            PlaylistListResponse(false, "网络错误: ${e.message}", null)
+        }
+    }
 
     suspend fun getMyPlaylists(): PlaylistListResponse {
         return try {
