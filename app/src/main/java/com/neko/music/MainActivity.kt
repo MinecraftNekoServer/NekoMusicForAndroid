@@ -26,6 +26,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.lifecycle.lifecycleScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -72,6 +73,7 @@ import com.neko.music.ui.screens.CacheManagementScreen
 import com.neko.music.ui.screens.AccountInfoScreen
 import com.neko.music.ui.screens.MyPlaylistsScreen
 import com.neko.music.ui.screens.PlaylistDetailScreen
+import com.neko.music.ui.screens.RankingScreen
 import com.neko.music.ui.theme.Neko云音乐Theme
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
@@ -338,6 +340,18 @@ fun MainScreen() {
                     },
                     onNavigateToFavorite = {
                         navController.navigate("favorites")
+                    },
+                    onNavigateToPlaylist = { playlistId ->
+                        Log.d("MainActivity", "导航到歌单详情: $playlistId")
+                        // 获取歌单详情信息
+                        val playlistManager = com.neko.music.data.manager.PlaylistManager.getInstance(context)
+                        // 这里简化处理，直接导航到歌单详情页
+                        // 实际应该先获取歌单信息再导航
+                        navController.navigate("playlist_detail/$playlistId/歌单/null/null/null/-1/false")
+                    },
+                    onNavigateToRanking = {
+                        Log.d("MainActivity", "导航到排行榜页面")
+                        navController.navigate("ranking")
                     }
                 )
             }
@@ -415,6 +429,61 @@ fun MainScreen() {
                         val encodedArtist =
                             java.net.URLEncoder.encode(music.artist, "UTF-8")
                         navController.navigate("player/$id/$encodedTitle/$encodedArtist")
+                    }
+                )
+            }
+            composable("ranking") {
+                val scope = androidx.compose.runtime.rememberCoroutineScope()
+                RankingScreen(
+                    onBackClick = {
+                        navController.popBackStack()
+                    },
+                    onPlayAll = { musicList ->
+                        Log.d("MainActivity", "播放全部排行榜: ${musicList.size}首")
+                        scope.launch {
+                            val playerManager = MusicPlayerManager.getInstance(context)
+                            val playlistManager = com.neko.music.data.manager.PlaylistManager.getInstance(context)
+                            
+                            // 清空当前播放列表
+                            playlistManager.clearPlaylist()
+                            
+                            // 将Music列表转换为播放列表
+                            musicList.forEach { music ->
+                                val musicToAdd = com.neko.music.data.model.Music(
+                                    id = music.id,
+                                    title = music.title,
+                                    artist = music.artist,
+                                    album = music.album ?: "",
+                                    duration = music.duration,
+                                    filePath = null,
+                                    coverFilePath = music.coverFilePath,
+                                    uploadUserId = null,
+                                    createdAt = null,
+                                    playCount = music.playCount
+                                )
+                                playlistManager.addToPlaylist(musicToAdd)
+                            }
+                            
+                            // 播放第一首
+                            if (musicList.isNotEmpty()) {
+                                val firstMusic = musicList[0]
+                                val fullCoverUrl = if (firstMusic.coverFilePath?.startsWith("/") == true) {
+                                    "https://music.cnmsb.xin${firstMusic.coverFilePath}"
+                                } else if (firstMusic.coverFilePath?.isNotEmpty() == true) {
+                                    firstMusic.coverFilePath
+                                } else {
+                                    "https://music.cnmsb.xin/api/music/cover/${firstMusic.id}"
+                                }
+                                playerManager.playMusic(
+                                    "https://music.cnmsb.xin/api/music/file/${firstMusic.id}",
+                                    firstMusic.id,
+                                    firstMusic.title,
+                                    firstMusic.artist,
+                                    firstMusic.coverFilePath ?: "",
+                                    fullCoverUrl
+                                )
+                            }
+                        }
                     }
                 )
             }

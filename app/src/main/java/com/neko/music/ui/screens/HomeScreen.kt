@@ -46,6 +46,7 @@ import com.neko.music.data.manager.UpdateInfo
 import com.neko.music.data.model.Music
 import com.neko.music.ui.theme.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.async
 
 @Composable
 fun HomeScreen(
@@ -60,29 +61,55 @@ fun HomeScreen(
     val toastMessage = remember { androidx.compose.runtime.mutableStateOf("") }
     val showToast = remember { androidx.compose.runtime.mutableStateOf(false) }
     
-    // 热门音乐状态
-    var recommendedMusic by remember { mutableStateOf<List<com.neko.music.data.model.Music>>(emptyList()) }
+    // 推荐歌单状态
+    var recommendedPlaylists by remember { mutableStateOf<List<PlaylistInfo>>(emptyList()) }
+    var rankingMusic by remember { mutableStateOf<List<com.neko.music.data.model.Music>>(emptyList()) }
     var playlistsLoading by remember { mutableStateOf(false) }
     var loadError by remember { mutableStateOf(false) }
     
-    // 获取热门音乐
+    // 获取推荐歌单
     LaunchedEffect(Unit) {
         playlistsLoading = true
         loadError = false
         scope.launch {
             try {
-                Log.d("HomeScreen", "开始加载热门音乐...")
-                val musicApi = com.neko.music.data.api.MusicApi(context)
-                val result = musicApi.getRanking(8)
-                result.onSuccess { musicList ->
-                    recommendedMusic = musicList
+                // 并行获取热门音乐和歌单
+                val playlistsDeferred = async {
+                    Log.d("HomeScreen", "开始加载推荐歌单...")
+                    val playlistApi = PlaylistApi(null, context)
+                    playlistApi.searchPlaylists()
+                }
+                
+                val rankingDeferred = async {
+                    Log.d("HomeScreen", "开始加载热门音乐...")
+                    val musicApi = com.neko.music.data.api.MusicApi(context)
+                    musicApi.getRanking(200)
+                }
+                
+                val playlistResponse = playlistsDeferred.await()
+                val rankingResult = rankingDeferred.await()
+                
+                // 处理歌单响应
+                if (playlistResponse.success && playlistResponse.playlists != null) {
+                    recommendedPlaylists = playlistResponse.playlists.take(7)
+                    Log.d("HomeScreen", "推荐歌单加载成功: ${playlistResponse.playlists.size}个")
+                } else {
+                    Log.e("HomeScreen", "推荐歌单加载失败: ${playlistResponse.message}")
+                }
+                
+                // 处理热门音乐响应
+                rankingResult.onSuccess { musicList ->
+                    rankingMusic = musicList
                     Log.d("HomeScreen", "热门音乐加载成功: ${musicList.size}首")
                 }.onFailure { error ->
                     Log.e("HomeScreen", "热门音乐加载失败: ${error.message}")
+                }
+                
+                if (playlistResponse.success && playlistResponse.playlists == null) {
                     loadError = true
                 }
             } catch (e: Exception) {
-                Log.e("HomeScreen", "热门音乐异常: ${e.message}", e)
+                Log.e("HomeScreen", "推荐歌单异常: ${e.message}", e)
                 loadError = true
             } finally {
                 playlistsLoading = false
@@ -344,11 +371,20 @@ fun HomeScreen(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
-                            items(recommendedMusic.withIndex().toList()) { (index, music) ->
-                                MusicCard(
-                                    music = music,
-                                    rank = index + 1,
-                                    onClick = { onNavigateToRanking() }
+                            // 热门音乐作为第一个
+                            if (rankingMusic.isNotEmpty()) {
+                                item {
+                                    RankingMusicCard(
+                                        musicList = rankingMusic,
+                                        onClick = { onNavigateToRanking() }
+                                    )
+                                }
+                            }
+                            // 其他歌单
+                            items(recommendedPlaylists) { playlist ->
+                                PlaylistCard(
+                                    playlist = playlist,
+                                    onClick = { onNavigateToPlaylist(playlist.id) }
                                 )
                             }
                         }
@@ -1072,15 +1108,6 @@ fun MusicCard(
     rank: Int = 0,
     onClick: () -> Unit
 ) {
-    var isPressed by remember { mutableStateOf(false) }
-    val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.95f else 1f,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessLow
-        )
-    )
-
     val context = LocalContext.current
     val musicApi = remember { com.neko.music.data.api.MusicApi(context) }
     var coverUrl by remember { mutableStateOf<String?>(null) }
@@ -1092,11 +1119,7 @@ fun MusicCard(
     Column(
         modifier = Modifier
             .width(160.dp)
-            .scale(scale)
-            .clickable {
-                isPressed = true
-                onClick()
-            },
+            .clickable { onClick() },
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         // 封面
@@ -1320,5 +1343,215 @@ fun RankingCard(
                 )
             }
         }
+    }
+}
+
+@Composable
+fun PlaylistCard(
+    playlist: PlaylistInfo,
+    onClick: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .width(160.dp)
+            .clickable(
+                indication = null,
+                interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+            ) { onClick() },
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        // 封面
+        Box(
+            modifier = Modifier
+                .size(160.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            SakuraPink.copy(alpha = 0.2f),
+                            SkyBlue.copy(alpha = 0.2f)
+                        )
+                    )
+                )
+                .shadow(
+                    elevation = 4.dp,
+                    spotColor = RoseRed.copy(alpha = 0.15f),
+                    ambientColor = Color.Gray.copy(alpha = 0.1f)
+                )
+        ) {
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(
+                        when {
+                            !playlist.firstMusicCover.isNullOrEmpty() -> playlist.firstMusicCover
+                            !playlist.coverPath.isNullOrEmpty() -> playlist.coverPath
+                            else -> "https://music.cnmsb.xin/api/user/avatar/default"
+                        }
+                    )
+                    .crossfade(true)
+                    .build(),
+                contentDescription = playlist.name,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
+            )
+            
+            // 音乐数量标签
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(8.dp)
+                    .background(
+                        color = Color.Black.copy(alpha = 0.6f),
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                    .padding(horizontal = 8.dp, vertical = 4.dp)
+            ) {
+                Text(
+                    text = "${playlist.musicCount}首",
+                    fontSize = 11.sp,
+                    color = Color.White,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+        }
+        
+        Spacer(modifier = Modifier.height(10.dp))
+        
+        // 歌单名称
+        Text(
+            text = playlist.name,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Medium,
+            color = Color.White.copy(alpha = 0.95f),
+            maxLines = 1,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+            modifier = Modifier.width(160.dp)
+        )
+        
+        Spacer(modifier = Modifier.height(4.dp))
+        
+        // 歌单描述
+        Text(
+            text = playlist.description ?: "暂无描述",
+            fontSize = 12.sp,
+            color = RoseRed.copy(alpha = 0.7f),
+            maxLines = 1,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+            modifier = Modifier.width(160.dp)
+        )
+    }
+}
+
+@Composable
+fun RankingMusicCard(
+    musicList: List<com.neko.music.data.model.Music>,
+    onClick: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .width(160.dp)
+            .clickable(
+                indication = null,
+                interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+            ) {
+                android.util.Log.d("RankingMusicCard", "点击热门音乐，共${musicList.size}首")
+                onClick()
+            },
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        // 封面
+        Box(
+            modifier = Modifier
+                .size(160.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            RoseRed.copy(alpha = 0.25f),
+                            SakuraPink.copy(alpha = 0.15f)
+                        )
+                    )
+                )
+                .shadow(
+                    elevation = 4.dp,
+                    spotColor = RoseRed.copy(alpha = 0.2f),
+                    ambientColor = Color.Gray.copy(alpha = 0.1f)
+                )
+        ) {
+            if (musicList.isNotEmpty()) {
+                val topMusic = musicList[0]
+                val context = LocalContext.current
+                val musicApi = remember { com.neko.music.data.api.MusicApi(context) }
+                var coverUrl by remember { mutableStateOf<String?>(null) }
+                
+                LaunchedEffect(topMusic.id) {
+                    coverUrl = musicApi.getMusicCoverUrl(topMusic)
+                }
+                
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(coverUrl ?: "https://music.cnmsb.xin/api/user/avatar/default")
+                        .crossfade(true)
+                        .build(),
+                    contentDescription = "热门音乐",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+            } else {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "🔥",
+                        fontSize = 48.sp
+                    )
+                }
+            }
+            
+            // 音乐数量标签
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(8.dp)
+                    .background(
+                        color = RoseRed.copy(alpha = 0.8f),
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                    .padding(horizontal = 8.dp, vertical = 4.dp)
+            ) {
+                Text(
+                    text = "${musicList.size}首",
+                    fontSize = 11.sp,
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+        
+        Spacer(modifier = Modifier.height(10.dp))
+        
+        // 标题
+        Text(
+            text = "热门音乐",
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Bold,
+            color = RoseRed.copy(alpha = 0.9f),
+            maxLines = 1,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+            modifier = Modifier.width(160.dp)
+        )
+        
+        Spacer(modifier = Modifier.height(4.dp))
+        
+        // 描述
+        Text(
+            text = "播放次数最高的歌曲",
+            fontSize = 12.sp,
+            color = RoseRed.copy(alpha = 0.7f),
+            maxLines = 1,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+            modifier = Modifier.width(160.dp)
+        )
     }
 }
