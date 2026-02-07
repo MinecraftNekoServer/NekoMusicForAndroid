@@ -298,11 +298,13 @@ fun RankingItem(
     rank: Int,
     onClick: () -> Unit
 ) {
+    val context = LocalContext.current
+    val musicApi = remember { MusicApi(context) }
     var coverUrl by remember { mutableStateOf<String?>(null) }
     var isLoaded by remember { mutableStateOf(false) }
     
     LaunchedEffect(music.id) {
-        coverUrl = music.coverUrl
+        coverUrl = musicApi.getMusicCoverUrl(music)
         isLoaded = true
     }
     
@@ -331,16 +333,16 @@ fun RankingItem(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(72.dp)
-            .clip(RoundedCornerShape(16.dp))
+            .height(64.dp)
+            .clip(RoundedCornerShape(12.dp))
             .background(backgroundColor)
             .shadow(
-                elevation = if (rank <= 3) 8.dp else 2.dp,
+                elevation = if (rank <= 3) 6.dp else 1.dp,
                 spotColor = RoseRed.copy(alpha = 0.3f),
                 ambientColor = RoseRed.copy(alpha = 0.1f)
             )
             .clickable { onClick() }
-            .padding(horizontal = 14.dp, vertical = 10.dp),
+            .padding(horizontal = 10.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         AnimatedVisibility(
@@ -357,23 +359,23 @@ fun RankingItem(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Box(
-                    modifier = Modifier.width(44.dp),
+                    modifier = Modifier.width(36.dp),
                     contentAlignment = Alignment.CenterStart
                 ) {
                     Text(
                         text = rank.toString(),
-                        fontSize = if (rank <= 3) 20.sp else 18.sp,
+                        fontSize = if (rank <= 3) 18.sp else 16.sp,
                         fontWeight = FontWeight.Bold,
                         color = rankColor
                     )
                 }
                 
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(6.dp))
                 
                 Box(
                     modifier = Modifier
-                        .size(52.dp)
-                        .clip(RoundedCornerShape(12.dp))
+                        .size(48.dp)
+                        .clip(RoundedCornerShape(10.dp))
                         .background(
                             Brush.radialGradient(
                                 colors = listOf(
@@ -392,12 +394,12 @@ fun RankingItem(
                         contentDescription = music.title,
                         modifier = Modifier
                             .fillMaxSize()
-                            .clip(RoundedCornerShape(12.dp)),
+                            .clip(RoundedCornerShape(10.dp)),
                         contentScale = ContentScale.Crop
                     )
                 }
                 
-                Spacer(modifier = Modifier.width(12.dp))
+                Spacer(modifier = Modifier.width(10.dp))
                 
                 Column(
                     modifier = Modifier.weight(1f),
@@ -405,16 +407,16 @@ fun RankingItem(
                 ) {
                     Text(
                         text = music.title,
-                        fontSize = 15.sp,
+                        fontSize = 14.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = Color.White.copy(alpha = 0.95f),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
-                    Spacer(modifier = Modifier.height(3.dp))
+                    Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = music.artist,
-                        fontSize = 13.sp,
+                        fontSize = 12.sp,
                         color = RoseRed.copy(alpha = 0.65f),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
@@ -424,7 +426,7 @@ fun RankingItem(
                 if (music.playCount != null && music.playCount > 0) {
                     Text(
                         text = formatPlayCount(music.playCount),
-                        fontSize = 12.sp,
+                        fontSize = 11.sp,
                         color = RoseRed.copy(alpha = 0.7f),
                         fontWeight = FontWeight.Medium
                     )
