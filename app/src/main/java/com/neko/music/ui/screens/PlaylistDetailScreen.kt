@@ -760,7 +760,7 @@ fun PlaylistDetailScreen(
                                         label = "分享到推特",
                                         color = Color(0xFF1DA1F2),
                                         onClick = {
-                                            val shareText = "我在Neko云音乐发现了宝藏歌单《$playlistName》，里面超好听！大家快来听喵~"
+                                            val shareText = "我在Neko云音乐发现了宝藏歌单《$playlistName》- https://music.cnmsb.xin/playlist/$playlistId，里面超好听！大家快来听喵~"
                                             val encodedText = java.net.URLEncoder.encode(shareText, "UTF-8")
                                             val intent = android.content.Intent(android.content.Intent.ACTION_VIEW).apply {
                                                 data = android.net.Uri.parse("https://twitter.com/intent/tweet?text=$encodedText")
@@ -788,7 +788,7 @@ fun PlaylistDetailScreen(
                                         color = RoseRed,
                                         onClick = {
                                             val shareUrl = "https://music.cnmsb.xin/playlist/$playlistId"
-                                            val shareText = "我在Neko云音乐发现了宝藏歌单《$playlistName》，里面超好听！大家快来听喵~"
+                                            val shareText = "我在Neko云音乐发现了宝藏歌单《$playlistName》- https://music.cnmsb.xin/playlist/$playlistId，里面超好听！大家快来听喵~"
                                             val clip = android.content.ClipData.newPlainText("歌单链接", shareText)
                                             val clipboard = context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
                                             clipboard.setPrimaryClip(clip)
