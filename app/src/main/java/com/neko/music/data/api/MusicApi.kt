@@ -118,7 +118,7 @@ class MusicApi(private val context: Context) {
         // 没有缓存或缓存未启用，从服务器获取
         return try {
             Log.d("MusicApi", "Fetching lyrics for music: ${music.id}")
-            val response = client.get("$baseUrl/api/music/lyrics/${music.id}")
+            val response = client.get("$baseUrl/api/music/lyrics/${music.id}?t=${System.currentTimeMillis()}")
             Log.d("MusicApi", "Response status: ${response.status}")
             val responseText = response.body<String>()
             Log.d("MusicApi", "Response raw text: $responseText")
