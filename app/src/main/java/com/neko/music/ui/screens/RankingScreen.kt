@@ -12,8 +12,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -127,13 +125,6 @@ fun RankingScreen(
                                 onPlayAll(musicList)
                             }
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.PlayArrow,
-                                contentDescription = "播放全部",
-                                tint = RoseRed,
-                                modifier = Modifier.size(20.dp)
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
                             Text(
                                 text = "播放全部",
                                 fontSize = 14.sp,
@@ -141,17 +132,6 @@ fun RankingScreen(
                                 color = RoseRed
                             )
                         }
-                    }
-                    IconButton(
-                        onClick = { refreshData() },
-                        enabled = !refreshing
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Refresh,
-                            contentDescription = "刷新",
-                            tint = if (refreshing) RoseRed.copy(alpha = 0.4f) else RoseRed,
-                            modifier = Modifier.size(22.dp)
-                        )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -191,7 +171,12 @@ fun RankingScreen(
                     LazyColumn(
                         state = listState,
                         modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+                        contentPadding = PaddingValues(
+                            start = 16.dp,
+                            end = 16.dp,
+                            top = 12.dp,
+                            bottom = 160.dp
+                        ),
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         itemsIndexed(
@@ -263,11 +248,7 @@ fun ErrorState(
             ),
             shape = RoundedCornerShape(20.dp)
         ) {
-            Icon(
-                imageVector = Icons.Default.Refresh,
-                contentDescription = null,
-                modifier = Modifier.size(18.dp)
-            )
+
             Spacer(modifier = Modifier.width(8.dp))
             Text(
                 text = "重试",
