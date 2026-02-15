@@ -114,17 +114,29 @@ fun formatTime(milliseconds: Long): String {
 // LRC歌词行数据类
 data class LrcLine(
     val time: Float, // 时间（秒）
-    val text: String // 歌词文本
+    val text: String, // 歌词文本
+    val translation: String = "" // 翻译文本（可选）
 )
 
-// 解析 LRC 格式歌词
+// 解析 LRC 格式歌词（支持双语）
 fun parseLrcLyrics(lrcText: String): List<LrcLine> {
+    android.util.Log.d("parseLrcLyrics", "开始解析歌词，文本长度: ${lrcText.length}")
     val lines = lrcText.lines()
+    android.util.Log.d("parseLrcLyrics", "歌词行数: ${lines.size}")
     val result = mutableListOf<LrcLine>()
     
-    for (line in lines) {
-        // 匹配时间标签 [00:00.000] 或 [00:00.60]
-        val timePattern = Regex("""\[(\d{2}):(\d{2})\.(\d{2,3})\]""")
+    var i = 0
+    while (i < lines.size) {
+        val line = lines[i].trim()
+        
+        // 跳过空行
+        if (line.isEmpty()) {
+            i++
+            continue
+        }
+        
+        // 匹配时间标签 [00:00.000] 或 [00:00.60] 或 [0:05.123]
+        val timePattern = Regex("""\[(\d{1,2}):(\d{1,2})\.(\d{2,3})\]""")
         val match = timePattern.find(line)
         
         if (match != null) {
@@ -132,18 +144,56 @@ fun parseLrcLyrics(lrcText: String): List<LrcLine> {
             val seconds = match.groupValues[2].toInt()
             val milliseconds = match.groupValues[3].toInt()
             
-            // 计算总时间（秒）
-            val time = minutes * 60 + seconds + milliseconds / 1000f
+            // 根据毫秒位数计算时间
+            val time = minutes * 60 + seconds + 
+                if (milliseconds.toString().length == 2) {
+                    milliseconds / 100f
+                } else {
+                    milliseconds / 1000f
+                }
             
             // 提取歌词文本（移除时间标签）
             val text = line.replace(timePattern, "").trim()
             
+            // 查找下一行是否有翻译
+            var translation = ""
+            if (i + 1 < lines.size) {
+                val nextLine = lines[i + 1].trim()
+                android.util.Log.d("parseLrcLyrics", "检查翻译行: $nextLine")
+                // 检查是否是JSON格式的翻译行
+                // 修复：正确匹配JSON格式的翻译
+                if (nextLine.startsWith("{") && nextLine.endsWith("}")) {
+                    // 移除开头和结尾的花括号
+                    var jsonContent = nextLine.substring(1, nextLine.length - 1)
+                    android.util.Log.d("parseLrcLyrics", "移除花括号后: $jsonContent")
+                    
+                    // 移除首尾的引号（包括转义的引号）
+                    // 处理转义的引号 {"content"} -> \"content\" -> content
+                    if (jsonContent.startsWith("\"") && jsonContent.endsWith("\"")) {
+                        jsonContent = jsonContent.substring(1, jsonContent.length - 1)
+                    } else if (jsonContent.startsWith("'") && jsonContent.endsWith("'")) {
+                        jsonContent = jsonContent.substring(1, jsonContent.length - 1)
+                    }
+                    
+                    android.util.Log.d("parseLrcLyrics", "移除外层引号后: $jsonContent")
+                    
+                    // 移除可能的转义引号
+                    translation = jsonContent.replace("\\\"", "")
+                    android.util.Log.d("parseLrcLyrics", "移除转义引号后: $translation")
+                    i++ // 跳过翻译行
+                }
+            }
+            
             if (text.isNotEmpty()) {
-                result.add(LrcLine(time, text))
+                result.add(LrcLine(time, text, translation))
+                android.util.Log.d("parseLrcLyrics", "添加歌词行: 时间=$time, 原文=$text, 翻译=$translation")
             }
         }
+        
+        i++
     }
     
+    android.util.Log.d("parseLrcLyrics", "解析完成，共 ${result.size} 行歌词")
     return result
 }
 
@@ -1147,17 +1197,33 @@ fun LyricsView(
                                 val line = lyrics[index]
                                 val isCurrentLine = index == currentIndex
 
-                                Text(
-                                    text = line.text,
-                                    fontSize = if (isCurrentLine) 18.sp else 14.sp,
-                                    fontWeight = if (isCurrentLine) FontWeight.Bold else FontWeight.Normal,
-                                    color = if (isCurrentLine) RoseRed else Color.Gray,
-                                    textAlign = TextAlign.Center,
-                                    lineHeight = 28.sp,
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .padding(vertical = 4.dp)
-                                )
+                                ) {
+                                    // 原文歌词
+                                    Text(
+                                        text = line.text,
+                                        fontSize = if (isCurrentLine) 18.sp else 14.sp,
+                                        fontWeight = if (isCurrentLine) FontWeight.Bold else FontWeight.Normal,
+                                        color = if (isCurrentLine) RoseRed else Color.Gray,
+                                        textAlign = TextAlign.Center
+                                    )
+                                    
+                                    // 翻译歌词（如果存在）
+                                    if (line.translation.isNotEmpty()) {
+                                        Text(
+                                            text = line.translation,
+                                            fontSize = if (isCurrentLine) 14.sp else 12.sp,
+                                            fontWeight = FontWeight.Normal,
+                                            color = if (isCurrentLine) RoseRed.copy(alpha = 0.9f) else Color.Gray.copy(alpha = 0.7f),
+                                            textAlign = TextAlign.Center,
+                                            modifier = Modifier.padding(top = 2.dp)
+                                        )
+                                    }
+                                }
                             }
 
                             // 添加底部占位，让最后一行歌词也能居中
