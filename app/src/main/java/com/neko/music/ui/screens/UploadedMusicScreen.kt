@@ -39,6 +39,7 @@ import com.neko.music.R
 import com.neko.music.data.api.UploadedMusic
 import com.neko.music.ui.theme.*
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -48,6 +49,7 @@ fun UploadedMusicScreen(
     token: String? = null
 ) {
     val context = LocalContext.current
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
     var musicList by remember { mutableStateOf<List<UploadedMusic>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
     var showError by remember { mutableStateOf(false) }
@@ -56,15 +58,24 @@ fun UploadedMusicScreen(
     LaunchedEffect(token) {
         if (token != null) {
             isLoading = true
-            // TODO: 调用API获取上传音乐列表
-            // val response = userApi.getUploadedMusic()
-            // if (response.success) {
-            //     musicList = response.musicList
-            // } else {
-            //     showError = true
-            //     errorMessage = response.message
-            // }
-            isLoading = false
+            // 调用API获取上传音乐列表
+            scope.launch {
+                try {
+                    val userApi = com.neko.music.data.api.UserApi(token)
+                    val response = userApi.getUploadedMusic()
+                    if (response.success) {
+                        musicList = response.musicList
+                    } else {
+                        showError = true
+                        errorMessage = response.message
+                    }
+                } catch (e: Exception) {
+                    showError = true
+                    errorMessage = "获取数据失败: ${e.message}"
+                } finally {
+                    isLoading = false
+                }
+            }
         } else {
             showError = true
             errorMessage = "请先登录"
