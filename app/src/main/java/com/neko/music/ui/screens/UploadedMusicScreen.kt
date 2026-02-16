@@ -315,7 +315,7 @@ fun MusicItem(
                 if (music.coverPath.isNotEmpty()) {
                     AsyncImage(
                         model = ImageRequest.Builder(LocalContext.current)
-                            .data("${baseUrl}${music.coverPath}")
+                            .data("${baseUrl}/api/music/cover/${music.id}")
                             .crossfade(true)
                             .build(),
                         contentDescription = "专辑封面",
