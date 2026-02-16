@@ -458,10 +458,10 @@ fun MainScreen() {
                     onBackClick = {
                         navController.popBackStack()
                     },
-                    onMusicClick = { musicId ->
-                        val encodedTitle = java.net.URLEncoder.encode(musicId.toString(), "UTF-8")
-                        val encodedArtist = java.net.URLEncoder.encode("", "UTF-8")
-                        navController.navigate("player/$musicId/$encodedTitle/$encodedArtist")
+                    onMusicClick = { music ->
+                        val encodedTitle = java.net.URLEncoder.encode(music.title, "UTF-8")
+                        val encodedArtist = java.net.URLEncoder.encode(music.artist, "UTF-8")
+                        navController.navigate("player/${music.id}/$encodedTitle/$encodedArtist")
                     },
                     token = tokenManager.getToken()
                 )

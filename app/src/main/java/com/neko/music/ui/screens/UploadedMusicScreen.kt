@@ -41,11 +41,13 @@ import com.neko.music.ui.theme.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
+private const val baseUrl = "https://music.cnmsb.xin"
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UploadedMusicScreen(
     onBackClick: () -> Unit = {},
-    onMusicClick: (Int) -> Unit = {},
+    onMusicClick: (UploadedMusic) -> Unit = {},
     token: String? = null
 ) {
     val context = LocalContext.current
@@ -131,7 +133,7 @@ fun UploadedMusicScreen(
                     EmptyView()
                 }
                 else -> {
-                    MusicListView(
+                    MusicList(
                         musicList = musicList,
                         onMusicClick = onMusicClick
                     )
@@ -240,9 +242,9 @@ fun EmptyView() {
 }
 
 @Composable
-fun MusicListView(
+fun MusicList(
     musicList: List<UploadedMusic>,
-    onMusicClick: (Int) -> Unit
+    onMusicClick: (UploadedMusic) -> Unit
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -252,7 +254,7 @@ fun MusicListView(
         items(musicList) { music ->
             MusicItem(
                 music = music,
-                onClick = { onMusicClick(music.id) }
+                onClick = { onMusicClick(music) }
             )
         }
     }
@@ -310,14 +312,26 @@ fun MusicItem(
                         )
                     )
             ) {
-                Icon(
-                    imageVector = Icons.Default.MusicNote,
-                    contentDescription = "音乐",
-                    tint = RoseRed,
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .size(32.dp)
-                )
+                if (music.coverPath.isNotEmpty()) {
+                    AsyncImage(
+                        model = ImageRequest.Builder(LocalContext.current)
+                            .data("${baseUrl}${music.coverPath}")
+                            .crossfade(true)
+                            .build(),
+                        contentDescription = "专辑封面",
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Icon(
+                        imageVector = Icons.Default.MusicNote,
+                        contentDescription = "音乐",
+                        tint = RoseRed,
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .size(32.dp)
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.width(16.dp))

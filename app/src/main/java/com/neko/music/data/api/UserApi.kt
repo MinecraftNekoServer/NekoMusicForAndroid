@@ -305,6 +305,8 @@ data class UploadedMusic(
     val language: String,
     val tags: String,
     val fileFormat: String,
+    val filePath: String,
+    val coverPath: String,
     val createdAt: String
 )
 
