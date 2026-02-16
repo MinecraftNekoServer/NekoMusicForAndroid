@@ -171,6 +171,31 @@ class UserApi(private val token: String? = null) {
             UpdateAvatarResponse(success = false, message = "网络错误: ${e.message}")
         }
     }
+
+    /**
+     * 获取用户上传审核通过的音乐
+     */
+    suspend fun getUploadedMusic(): UploadedMusicResponse {
+        return try {
+            val response = client.get("$baseUrl/api/user/uploaded-music") {
+                token?.let {
+                    headers {
+                        append(HttpHeaders.Authorization, "Bearer $it")
+                    }
+                }
+            }
+            response.body()
+        } catch (e: Exception) {
+            Log.e("UserApi", "获取上传音乐失败", e)
+            UploadedMusicResponse(
+                success = false,
+                message = "网络错误: ${e.message}",
+                userId = -1,
+                musicList = emptyList(),
+                total = 0
+            )
+        }
+    }
 }
 
 // 数据模型
@@ -246,4 +271,26 @@ data class UpdateAvatarResponse(
     val success: Boolean,
     val message: String,
     val avatarUrl: String? = null
+)
+
+@Serializable
+data class UploadedMusic(
+    val id: Int,
+    val title: String,
+    val artist: String,
+    val album: String,
+    val duration: Int,
+    val language: String,
+    val tags: String,
+    val fileFormat: String,
+    val createdAt: String
+)
+
+@Serializable
+data class UploadedMusicResponse(
+    val success: Boolean,
+    val message: String,
+    val userId: Int,
+    val musicList: List<UploadedMusic>,
+    val total: Int
 )

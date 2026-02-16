@@ -42,6 +42,7 @@ fun MineScreen(
     onAboutClick: () -> Unit = {},
     onNavigateToSettings: () -> Unit = {},
     onAccountInfoClick: () -> Unit = {},
+    onUploadClick: () -> Unit = {},
     isLoggedIn: Boolean = false,
     username: String? = null,
     userId: Int = -1,
@@ -106,7 +107,7 @@ fun MineScreen(
                 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                MineStats()
+                MineStats(onUploadClick = onUploadClick)
                 
                 Spacer(modifier = Modifier.height(16.dp))
                 
@@ -283,7 +284,17 @@ fun MineHeader(
 }
 
 @Composable
-fun MineStats() {
+fun MineStats(onUploadClick: () -> Unit = {}) {
+    var uploadCount by remember { mutableStateOf(0) }
+    
+    LaunchedEffect(Unit) {
+        // TODO: 调用API获取上传数量
+        // val response = userApi.getUploadedMusic()
+        // if (response.success) {
+        //     uploadCount = response.total
+        // }
+    }
+    
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -303,16 +314,14 @@ fun MineStats() {
                 ambientColor = Color.Gray.copy(alpha = 0.1f)
             )
             .padding(20.dp),
-        horizontalArrangement = Arrangement.SpaceEvenly
+        horizontalArrangement = Arrangement.Center
     ) {
-        StatItem("0", "上传")
-        StatItem("0", "关注")
-        StatItem("0", "粉丝")
+        StatItem(uploadCount.toString(), "上传", onUploadClick = onUploadClick)
     }
 }
 
 @Composable
-fun StatItem(count: String, label: String) {
+fun StatItem(count: String, label: String, onUploadClick: () -> Unit = {}) {
     var isPressed by remember { mutableStateOf(false) }
     val scale by animateFloatAsState(
         targetValue = if (isPressed) 0.95f else 1f,
@@ -327,6 +336,7 @@ fun StatItem(count: String, label: String) {
             .scale(scale)
             .clickable {
                 isPressed = true
+                onUploadClick()
             },
         horizontalAlignment = Alignment.CenterHorizontally
     ) {

@@ -74,6 +74,7 @@ import com.neko.music.ui.screens.AccountInfoScreen
 import com.neko.music.ui.screens.MyPlaylistsScreen
 import com.neko.music.ui.screens.PlaylistDetailScreen
 import com.neko.music.ui.screens.RankingScreen
+import com.neko.music.ui.screens.UploadedMusicScreen
 import com.neko.music.ui.theme.Neko云音乐Theme
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
@@ -378,6 +379,13 @@ fun MainScreen() {
                     onAccountInfoClick = {
                         navController.navigate("account_info")
                     },
+                    onUploadClick = {
+                        if (isLoggedIn) {
+                            navController.navigate("uploaded_music")
+                        } else {
+                            showLoginScreen = true
+                        }
+                    },
                     isLoggedIn = isLoggedIn,
                     username = currentUsername,
                     userId = currentUserId,
@@ -438,6 +446,20 @@ fun MainScreen() {
                     onBackClick = {
                         navController.popBackStack()
                     }
+                )
+            }
+            composable("uploaded_music") {
+                val tokenManager = com.neko.music.data.manager.TokenManager(context)
+                UploadedMusicScreen(
+                    onBackClick = {
+                        navController.popBackStack()
+                    },
+                    onMusicClick = { musicId ->
+                        val encodedTitle = java.net.URLEncoder.encode(musicId.toString(), "UTF-8")
+                        val encodedArtist = java.net.URLEncoder.encode("", "UTF-8")
+                        navController.navigate("player/$musicId/$encodedTitle/$encodedArtist")
+                    },
+                    token = tokenManager.getToken()
                 )
             }
             composable(
