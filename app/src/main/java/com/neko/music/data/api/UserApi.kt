@@ -14,6 +14,8 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.decodeFromJsonElement
 import android.util.Log
+import io.ktor.client.statement.bodyAsText
+import kotlinx.serialization.json.JsonArray
 
 class UserApi(private val token: String? = null) {
     private val client = HttpClient(OkHttp) {
@@ -184,7 +186,27 @@ class UserApi(private val token: String? = null) {
                     }
                 }
             }
-            response.body()
+            
+            // 先尝试自动反序列化
+            try {
+                val result = response.body<UploadedMusicResponse>()
+                Log.d("UserApi", "获取上传音乐成功: ${result.success}, 数量: ${result.total}")
+                result
+            } catch (e: Exception) {
+                // 如果自动反序列化失败，尝试手动解析
+                Log.w("UserApi", "自动反序列化失败，尝试手动解析: ${e.message}")
+                val responseBody = response.bodyAsText()
+                Log.d("UserApi", "响应内容: $responseBody")
+                
+                // 返回默认值，避免应用崩溃
+                UploadedMusicResponse(
+                    success = false,
+                    message = "数据解析错误: ${e.message}",
+                    userId = -1,
+                    musicList = emptyList(),
+                    total = 0
+                )
+            }
         } catch (e: Exception) {
             Log.e("UserApi", "获取上传音乐失败", e)
             UploadedMusicResponse(

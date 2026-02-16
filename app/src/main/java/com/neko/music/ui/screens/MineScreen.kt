@@ -46,7 +46,8 @@ fun MineScreen(
     isLoggedIn: Boolean = false,
     username: String? = null,
     userId: Int = -1,
-    onLoginSuccess: () -> Unit = {}
+    onLoginSuccess: () -> Unit = {},
+    token: String? = null
 ) {
     val context = LocalContext.current
     val view = LocalView.current
@@ -107,7 +108,7 @@ fun MineScreen(
                 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                MineStats(onUploadClick = onUploadClick)
+                MineStats(onUploadClick = onUploadClick, token = token)
                 
                 Spacer(modifier = Modifier.height(16.dp))
                 
@@ -284,15 +285,22 @@ fun MineHeader(
 }
 
 @Composable
-fun MineStats(onUploadClick: () -> Unit = {}) {
+fun MineStats(onUploadClick: () -> Unit = {}, token: String? = null) {
     var uploadCount by remember { mutableStateOf(0) }
+    val context = LocalContext.current
     
-    LaunchedEffect(Unit) {
-        // TODO: 调用API获取上传数量
-        // val response = userApi.getUploadedMusic()
-        // if (response.success) {
-        //     uploadCount = response.total
-        // }
+    LaunchedEffect(token) {
+        if (token != null) {
+            try {
+                val userApi = com.neko.music.data.api.UserApi(token)
+                val response = userApi.getUploadedMusic()
+                if (response.success) {
+                    uploadCount = response.total
+                }
+            } catch (e: Exception) {
+                // 静默失败，保持默认值0
+            }
+        }
     }
     
     Row(

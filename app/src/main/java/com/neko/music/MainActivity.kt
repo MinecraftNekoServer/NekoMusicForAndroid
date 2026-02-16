@@ -206,6 +206,7 @@ fun MainScreen() {
     var isLoggedIn by androidx.compose.runtime.remember { mutableStateOf(false) }
     var currentUsername by androidx.compose.runtime.remember { mutableStateOf<String?>(null) }
     var currentUserId by androidx.compose.runtime.remember { mutableStateOf(-1) }
+    var currentUserToken by androidx.compose.runtime.remember { mutableStateOf<String?>(null) }
 
     // 初始化登录状态
     androidx.compose.runtime.LaunchedEffect(Unit) {
@@ -213,6 +214,7 @@ fun MainScreen() {
         isLoggedIn = tokenManager.isLoggedIn()
         currentUsername = tokenManager.getUsername()
         currentUserId = tokenManager.getUserId()
+        currentUserToken = tokenManager.getToken()
 
         // 初始化收藏管理器
         playerManager.initializeFavoriteManager()
@@ -395,7 +397,9 @@ fun MainScreen() {
                         isLoggedIn = tokenManager.isLoggedIn()
                         currentUsername = tokenManager.getUsername()
                         currentUserId = tokenManager.getUserId()
-                    }
+                        currentUserToken = tokenManager.getToken()
+                    },
+                    token = currentUserToken
                 )
             }
             composable(BottomNavItem.MyPlaylists.route) {
@@ -1058,6 +1062,7 @@ fun MainScreen() {
                             isLoggedIn = tokenManager.isLoggedIn()
                             currentUsername = tokenManager.getUsername()
                             currentUserId = tokenManager.getUserId()
+                            currentUserToken = tokenManager.getToken()
                         },
                         onBackClick = {
                             showLoginScreen = false
