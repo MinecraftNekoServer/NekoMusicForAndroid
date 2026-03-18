@@ -23,6 +23,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.ui.res.painterResource
 import com.neko.music.R
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -32,6 +33,8 @@ fun CacheManagementScreen(
     val context = androidx.compose.ui.platform.LocalContext.current
     val isDarkTheme = isSystemInDarkTheme()
     val cacheManager = remember { MusicCacheManager.getInstance(context) }
+    val playlistManager = remember { com.neko.music.data.manager.PlaylistManager.getInstance(context) }
+    val musicPlayerManager = remember { com.neko.music.service.MusicPlayerManager.getInstance(context) }
     
     // 缓存数据
     var cacheSize by remember { mutableStateOf(cacheManager.getCacheSizeFormatted()) }
@@ -39,6 +42,7 @@ fun CacheManagementScreen(
     var cachedItems by remember { mutableStateOf(cacheManager.getAllCachedItems()) }
     var showClearDialog by remember { mutableStateOf(false) }
     var showDeleteItemDialog by remember { mutableStateOf<Pair<String, String>?>(null) }
+    var isLoading by remember { mutableStateOf(false) }
     
     // 定期更新缓存数据
     LaunchedEffect(Unit) {
@@ -60,6 +64,81 @@ fun CacheManagementScreen(
                     }
                 },
                 actions = {
+                    // 播放全部按钮
+                    TextButton(
+                        onClick = {
+                            if (cachedItems.isNotEmpty()) {
+                                isLoading = true
+                                kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
+                                    try {
+                                        // 1. 清空当前播放列表
+                                        playlistManager.clearPlaylist()
+                                        
+                                        // 2. 构造所有缓存音乐的Music对象并添加到播放列表
+                                        val musicList = mutableListOf<com.neko.music.data.model.Music>()
+                                        
+                                        for (item in cachedItems) {
+                                            try {
+                                                val musicId = item.first.toInt()
+                                                // 构造一个临时的Music对象
+                                                val tempMusic = com.neko.music.data.model.Music(
+                                                    id = musicId,
+                                                    title = item.second,
+                                                    artist = "未知歌手",
+                                                    album = "未知专辑",
+                                                    duration = 0,
+                                                    filePath = null,
+                                                    coverFilePath = null,
+                                                    uploadUserId = null,
+                                                    createdAt = null
+                                                )
+                                                
+                                                // 添加到播放列表
+                                                playlistManager.addToPlaylist(tempMusic)
+                                                musicList.add(tempMusic)
+                                            } catch (e: Exception) {
+                                                android.util.Log.e("CacheManagementScreen", "添加音乐失败: ${item.first}", e)
+                                            }
+                                        }
+                                        
+                                        // 3. 如果有音乐,在主线程开始播放第一首
+                                        if (musicList.isNotEmpty()) {
+                                            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                                                val firstMusic = musicList.first()
+                                                val musicApi = com.neko.music.data.api.MusicApi(context)
+                                                val fullCoverUrl = if (!firstMusic.coverFilePath.isNullOrEmpty()) {
+                                                    "https://music.cnmsb.xin${firstMusic.coverFilePath}"
+                                                } else {
+                                                    "https://music.cnmsb.xin/api/music/cover/${firstMusic.id}"
+                                                }
+                                                val musicUrl = musicApi.getMusicFileUrl(firstMusic)
+                                                musicPlayerManager.playMusic(
+                                                    musicUrl,
+                                                    firstMusic.id,
+                                                    firstMusic.title,
+                                                    firstMusic.artist,
+                                                    firstMusic.coverFilePath ?: "",
+                                                    fullCoverUrl
+                                                )
+                                            }
+                                        }
+                                    } catch (e: Exception) {
+                                        android.util.Log.e("CacheManagementScreen", "播放全部失败", e)
+                                    } finally {
+                                        isLoading = false
+                                    }
+                                }
+                            }
+                        },
+                        enabled = cachedItems.isNotEmpty() && !isLoading
+                    ) {
+                        Text(
+                            text = "播放全部",
+                            color = if (cachedItems.isNotEmpty() && !isLoading) RoseRed else Color.Gray,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    
                     TextButton(
                         onClick = { 
                             if (cachedItems.isNotEmpty()) {
@@ -146,6 +225,14 @@ fun CacheManagementScreen(
                                         fontSize = 14.sp,
                                         color = if (isDarkTheme) Color(0xFFB8B8D1).copy(alpha = 0.8f) else Color.Gray
                                     )
+                                    if (isLoading) {
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        Text(
+                                            text = "正在准备播放列表...",
+                                            fontSize = 14.sp,
+                                            color = RoseRed
+                                        )
+                                    }
                                 }
                                 Image(
                                     painter = painterResource(R.drawable.music),
