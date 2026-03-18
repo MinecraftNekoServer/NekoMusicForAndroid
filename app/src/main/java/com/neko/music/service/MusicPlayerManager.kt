@@ -69,6 +69,10 @@ class MusicPlayerManager private constructor(context: Context) {
     private var preloadedNextMusicUrl: String? = null
     private var preloadedNextMusicFullCoverUrl: String? = null
 
+    // 重试计数器 - 用于跟踪当前音乐的重试次数
+    private var retryCount = 0
+    private val MAX_RETRY_COUNT = 2 // 最大重试次数
+
     // 媒体会话 - 延迟初始化
     private var mediaSession: MediaSessionCompat? = null
 
@@ -476,7 +480,10 @@ class MusicPlayerManager private constructor(context: Context) {
             }
 
             override fun onPlayerError(error: com.google.android.exoplayer2.PlaybackException) {
-                Log.e("MusicPlayerManager", "播放错误: ${error.message}", error)
+                Log.e("MusicPlayerManager", "播放错误: ${error.message}, 重试次数: $retryCount", error)
+                // 增加重试计数器
+                retryCount++
+
                 // 尝试重新播放当前歌曲
                 val currentUrl = _currentMusicUrl.value
                 val currentId = _currentMusicId.value
@@ -484,8 +491,8 @@ class MusicPlayerManager private constructor(context: Context) {
                 val currentArtist = _currentMusicArtist.value
                 val currentCover = _currentMusicCover.value
 
-                if (currentUrl != null) {
-                    Log.d("MusicPlayerManager", "尝试重新播放: $currentTitle")
+                if (currentUrl != null && retryCount < MAX_RETRY_COUNT) {
+                    Log.d("MusicPlayerManager", "尝试重新播放: $currentTitle (第 $retryCount 次重试)")
                     // 延迟 500ms 后重试
                     mainHandler.postDelayed({
                         try {
@@ -499,6 +506,10 @@ class MusicPlayerManager private constructor(context: Context) {
                             Log.e("MusicPlayerManager", "重试播放失败: ${e.message}", e)
                         }
                     }, 500)
+                } else {
+                    // 重试次数达到上限,自动切换到下一首
+                    Log.d("MusicPlayerManager", "重试次数达到上限 ($MAX_RETRY_COUNT), 自动切换到下一首")
+                    next()
                 }
             }
 
@@ -754,6 +765,9 @@ class MusicPlayerManager private constructor(context: Context) {
     }
     
     fun playMusic(url: String, id: Int? = null, title: String? = null, artist: String? = null, cover: String? = null, fullCoverUrl: String? = null) {
+        // 重置重试计数器
+        retryCount = 0
+
         // 清空预加载缓存（因为要播放新音乐了）
         preloadedNextMusic = null
         preloadedNextMusicUrl = null
