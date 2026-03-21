@@ -26,6 +26,11 @@ class UserApi(private val token: String? = null) {
                 isLenient = true
             })
         }
+        install(io.ktor.client.plugins.HttpTimeout) {
+            requestTimeoutMillis = 15_000
+            connectTimeoutMillis = 15_000
+            socketTimeoutMillis = 15_000
+        }
     }
 
     private val baseUrl = "https://music.cnmsb.xin"
