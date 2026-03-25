@@ -12,7 +12,7 @@ android {
 
     defaultConfig {
         applicationId = "com.neko.music"
-        minSdk = 21
+        minSdk = 23
         targetSdk = 36
         versionCode = 40
         versionName = "20260321"
