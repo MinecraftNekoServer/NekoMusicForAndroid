@@ -35,28 +35,36 @@ class MusicCacheManager private constructor(private val context: Context) {
     }
 
     private val cacheDir: File by lazy {
-        File(context.cacheDir, CACHE_DIR_NAME).apply {
-            if (!exists()) mkdirs()
-        }
-    }
+    File(context.cacheDir, CACHE_DIR_NAME)
+}
 
-    private val musicDir: File by lazy {
-        File(cacheDir, MUSIC_DIR).apply {
-            if (!exists()) mkdirs()
-        }
-    }
+private val musicDir: File by lazy {
+    File(cacheDir, MUSIC_DIR)
+}
 
-    private val coverDir: File by lazy {
-        File(cacheDir, COVER_DIR).apply {
-            if (!exists()) mkdirs()
-        }
-    }
+private val coverDir: File by lazy {
+    File(cacheDir, COVER_DIR)
+}
 
-    private val lyricsDir: File by lazy {
-        File(cacheDir, LYRICS_DIR).apply {
-            if (!exists()) mkdirs()
-        }
+private val lyricsDir: File by lazy {
+    File(cacheDir, LYRICS_DIR)
+}
+
+// 创建缓存目录（仅在缓存启用时调用）
+private fun ensureCacheDirs() {
+    if (!cacheDir.exists()) {
+        cacheDir.mkdirs()
     }
+    if (!musicDir.exists()) {
+        musicDir.mkdirs()
+    }
+    if (!coverDir.exists()) {
+        coverDir.mkdirs()
+    }
+    if (!lyricsDir.exists()) {
+        lyricsDir.mkdirs()
+    }
+}
 
     private val prefs by lazy {
         context.getSharedPreferences("music_cache", Context.MODE_PRIVATE)
@@ -124,6 +132,9 @@ class MusicCacheManager private constructor(private val context: Context) {
         }
 
         try {
+            // 确保缓存目录存在
+            ensureCacheDirs()
+
             // 标记正在缓存
             prefs.edit()
                 .putBoolean("music_${musicId}_caching", true)
@@ -164,6 +175,9 @@ class MusicCacheManager private constructor(private val context: Context) {
         }
 
         try {
+            // 确保缓存目录存在
+            ensureCacheDirs()
+
             val fileName = "cover_$musicId.jpg"
             val file = File(coverDir, fileName)
 
@@ -193,6 +207,9 @@ class MusicCacheManager private constructor(private val context: Context) {
         }
 
         try {
+            // 确保缓存目录存在
+            ensureCacheDirs()
+
             val fileName = "lyrics_$musicId.lrc"
             val file = File(lyricsDir, fileName)
 
@@ -272,11 +289,18 @@ class MusicCacheManager private constructor(private val context: Context) {
      */
     fun clearAllCache() {
         try {
-            cacheDir.deleteRecursively()
-            cacheDir.mkdirs()
-            musicDir.mkdirs()
-            coverDir.mkdirs()
-            lyricsDir.mkdirs()
+            if (!isCacheEnabled()) {
+                Log.d(TAG, "缓存未启用，跳过清空缓存")
+                return
+            }
+            
+            if (cacheDir.exists()) {
+                cacheDir.deleteRecursively()
+                cacheDir.mkdirs()
+                musicDir.mkdirs()
+                coverDir.mkdirs()
+                lyricsDir.mkdirs()
+            }
 
             // 清除所有缓存记录
             prefs.edit().clear().apply()
@@ -291,6 +315,9 @@ class MusicCacheManager private constructor(private val context: Context) {
      * 获取缓存大小（字节）
      */
     fun getCacheSize(): Long {
+        if (!cacheDir.exists()) {
+            return 0L
+        }
         return cacheDir.walkTopDown()
             .filter { it.isFile }
             .map { it.length() }
@@ -314,7 +341,11 @@ class MusicCacheManager private constructor(private val context: Context) {
      * 获取缓存的音乐数量
      */
     fun getCachedMusicCount(): Int {
-        return musicDir.listFiles()?.size ?: 0
+        return if (musicDir.exists()) {
+            musicDir.listFiles()?.size ?: 0
+        } else {
+            0
+        }
     }
 
     /**
@@ -322,10 +353,12 @@ class MusicCacheManager private constructor(private val context: Context) {
      */
     fun getAllCachedItems(): List<Pair<String, String>> {
         val items = mutableListOf<Pair<String, String>>()
-        musicDir.listFiles()?.forEach { file ->
-            val musicId = file.nameWithoutExtension.replace("music_", "")
-            val title = prefs.getString("music_${musicId}_title", "未知歌曲") ?: "未知歌曲"
-            items.add(Pair(musicId, title))
+        if (musicDir.exists()) {
+            musicDir.listFiles()?.forEach { file ->
+                val musicId = file.nameWithoutExtension.replace("music_", "")
+                val title = prefs.getString("music_${musicId}_title", "未知歌曲") ?: "未知歌曲"
+                items.add(Pair(musicId, title))
+            }
         }
         return items
     }

@@ -610,7 +610,10 @@ fun AvatarCropDialog(
     
 // 加载图片
     val imageBitmap: ImageBitmap? = produceState<ImageBitmap?>(initialValue = null, imageUri) {
-        val loader = coil.ImageLoader(context)
+        val loader = coil.ImageLoader.Builder(context)
+            .diskCache(null)
+            .memoryCache(null)
+            .build()
         val request = ImageRequest.Builder(context)
             .data(imageUri)
             .allowHardware(false) // 需要软件渲染以支持裁剪

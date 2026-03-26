@@ -36,7 +36,10 @@ class MusicPlayerManager private constructor(context: Context) {
     
     private val playlistManager = PlaylistManager.getInstance(context)
     private val appContext = context.applicationContext
-    private val imageLoader = ImageLoader(appContext)
+    private val imageLoader = ImageLoader.Builder(appContext)
+        .diskCache(null)
+        .memoryCache(null)
+        .build()
     
     // SharedPreferences 用于持久化播放模式
     private val prefs = appContext.getSharedPreferences("player_prefs", Context.MODE_PRIVATE)
@@ -841,33 +844,35 @@ class MusicPlayerManager private constructor(context: Context) {
                     // 更新addedAt时间，标记为最近播放
                     playlistManager.updateAddedAt(id)
 
-                    // 缓存管理
+                    // 缓存管理 - 仅在缓存启用时执行
                     val cacheManager = com.neko.music.data.cache.MusicCacheManager.getInstance(context)
                     
-                    // 检查是否已缓存，如果没有则开始缓存
-                    if (cacheManager.getCachedMusicFile(id) == null) {
-                        cacheManager.cacheMusicFile(id, url, title)
-                            .onSuccess { 
-                                Log.d("MusicPlayerManager", "音乐缓存成功: $title")
-                            }
-                            .onFailure { e ->
-                                Log.e("MusicPlayerManager", "音乐缓存失败: $title", e)
-                            }
-                    } else {
-                        // 更新缓存中的音乐标题
-                        cacheManager.updateMusicTitle(id, title)
-                    }
-
-                    // 缓存封面
-                    if (fullCoverUrl != null && fullCoverUrl.isNotEmpty()) {
-                        if (cacheManager.getCachedCoverFile(id) == null) {
-                            cacheManager.cacheCover(id, fullCoverUrl)
-                                .onSuccess {
-                                    Log.d("MusicPlayerManager", "封面缓存成功: $title")
+                    if (cacheManager.isCacheEnabled()) {
+                        // 检查是否已缓存，如果没有则开始缓存
+                        if (cacheManager.getCachedMusicFile(id) == null) {
+                            cacheManager.cacheMusicFile(id, url, title)
+                                .onSuccess { 
+                                    Log.d("MusicPlayerManager", "音乐缓存成功: $title")
                                 }
                                 .onFailure { e ->
-                                    Log.e("MusicPlayerManager", "封面缓存失败: $title", e)
+                                    Log.e("MusicPlayerManager", "音乐缓存失败: $title", e)
                                 }
+                        } else {
+                            // 更新缓存中的音乐标题
+                            cacheManager.updateMusicTitle(id, title)
+                        }
+
+                        // 缓存封面
+                        if (fullCoverUrl != null && fullCoverUrl.isNotEmpty()) {
+                            if (cacheManager.getCachedCoverFile(id) == null) {
+                                cacheManager.cacheCover(id, fullCoverUrl)
+                                    .onSuccess {
+                                        Log.d("MusicPlayerManager", "封面缓存成功: $title")
+                                    }
+                                    .onFailure { e ->
+                                        Log.e("MusicPlayerManager", "封面缓存失败: $title", e)
+                                    }
+                            }
                         }
                     }
 
