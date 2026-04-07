@@ -38,6 +38,12 @@ class FuckChinaOSFloatService : Service() {
     private var updateJob: Job? = null
     private var layoutParams: WindowManager.LayoutParams? = null
     
+    // 缓存当前显示的数据，避免不必要的更新
+    private var cachedTitle: String? = null
+    private var cachedArtist: String? = null
+    private var cachedIsPlaying: Boolean? = null
+    private var cachedCoverPath: String? = null
+    
     // 拖动相关变量
     private var initialX = 0
     private var initialY = 0
@@ -238,42 +244,63 @@ class FuckChinaOSFloatService : Service() {
         val coverView = floatView?.findViewById<android.widget.ImageView>(R.id.float_cover)
         val playAnimation = floatView?.findViewById<PlayAnimationView>(R.id.float_play_animation)
         
-        tvTitle?.text = playerManager.currentMusicTitle.value ?: "Neko云音乐"
-        tvArtist?.text = playerManager.currentMusicArtist.value ?: "暂无播放"
+        // 获取当前数据
+        val currentTitle = playerManager.currentMusicTitle.value ?: "Neko云音乐"
+        val currentArtist = playerManager.currentMusicArtist.value ?: "暂无播放"
+        val currentIsPlaying = playerManager.isPlaying.value
+        val currentCoverPath = playerManager.currentMusicCover.value
         
-        btnPlayPause?.setImageResource(
-            if (playerManager.isPlaying.value) R.drawable.ic_widget_pause else R.drawable.ic_widget_play
-        )
+        // 只在数据变化时更新标题
+        if (cachedTitle != currentTitle) {
+            tvTitle?.text = currentTitle
+            cachedTitle = currentTitle
+        }
+        
+        // 只在数据变化时更新艺术家
+        if (cachedArtist != currentArtist) {
+            tvArtist?.text = currentArtist
+            cachedArtist = currentArtist
+        }
+        
+        // 只在数据变化时更新播放状态
+        if (cachedIsPlaying != currentIsPlaying) {
+            btnPlayPause?.setImageResource(
+                if (currentIsPlaying) R.drawable.ic_widget_pause else R.drawable.ic_widget_play
+            )
 
-        // 更新播放动画
-        if (playerManager.isPlaying.value) {
-            playAnimation?.visibility = View.VISIBLE
-            playAnimation?.setPlaying(true)
-        } else {
-            playAnimation?.visibility = View.INVISIBLE
-            playAnimation?.setPlaying(false)
+            // 更新播放动画
+            if (currentIsPlaying) {
+                playAnimation?.visibility = View.VISIBLE
+                playAnimation?.setPlaying(true)
+            } else {
+                playAnimation?.visibility = View.INVISIBLE
+                playAnimation?.setPlaying(false)
+            }
+            cachedIsPlaying = currentIsPlaying
         }
 
-        // 更新封面（如果有）
-        val coverPath = playerManager.currentMusicCover.value
-        if (coverPath != null && coverPath.isNotEmpty()) {
-            if (coverPath.startsWith("http")) {
-                // 网络URL，使用 Coil 加载
-                coverView?.load(coverPath) {
-                    placeholder(R.mipmap.ic_launcher)
-                    error(R.mipmap.ic_launcher)
-                    crossfade(true)
+        // 只在封面路径变化时更新封面
+        if (cachedCoverPath != currentCoverPath) {
+            if (currentCoverPath != null && currentCoverPath.isNotEmpty()) {
+                if (currentCoverPath.startsWith("http")) {
+                    // 网络URL，使用 Coil 加载
+                    coverView?.load(currentCoverPath) {
+                        placeholder(R.mipmap.ic_launcher)
+                        error(R.mipmap.ic_launcher)
+                        crossfade(true)
+                    }
+                } else {
+                    // 本地路径，使用 Uri
+                    try {
+                        coverView?.setImageURI(android.net.Uri.parse(currentCoverPath))
+                    } catch (e: Exception) {
+                        coverView?.setImageResource(R.mipmap.ic_launcher)
+                    }
                 }
             } else {
-                // 本地路径，使用 Uri
-                try {
-                    coverView?.setImageURI(android.net.Uri.parse(coverPath))
-                } catch (e: Exception) {
-                    coverView?.setImageResource(R.mipmap.ic_launcher)
-                }
+                coverView?.setImageResource(R.mipmap.ic_launcher)
             }
-        } else {
-            coverView?.setImageResource(R.mipmap.ic_launcher)
+            cachedCoverPath = currentCoverPath
         }
     }
 
