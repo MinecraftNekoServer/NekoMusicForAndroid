@@ -505,10 +505,54 @@
     <string name="unsupported_audio_format">不支持的音频格式，仅支持 WAV、FLAC、MP3 格式</string>
     <string name="unsupported_lyrics_format">歌词文件仅支持 LRC 格式</string>
     <string name="invalid_lyrics_timestamp">LRC 文件必须包含时间戳（格式：[mm:ss.xx]）</string>
-    <string name="not_required_for_instrumental">纯音乐不需要歌词文件</string>
     <string name="desktop_lyric">桌面歌词</string>
     
     <!-- VR歌词无障碍服务 -->
     <string name="vr_lyric_accessibility_service_description">VR歌词HUD - 在VR环境中全局显示播放歌词</string>
     <string name="vr_lyric_accessibility_service_summary">为VR设备优化的歌词显示服务，可在所有应用中显示歌词</string>
+
+    <!-- 默认值 -->
+    <string name="default_unknown_song">未知歌曲</string>
+    <string name="default_no_play">暂无播放</string>
+    <string name="default_unknown_artist">未知歌手</string>
+
+    <!-- 对话框 -->
+    <string name="dialog_logout_title">退出登录</string>
+    <string name="dialog_logout_message">确定要退出登录吗？</string>
+    <string name="dialog_confirm">确定</string>
+    <string name="dialog_cancel">取消</string>
+    <string name="dialog_close">关闭</string>
+
+    <!-- 歌单 -->
+    <string name="playlist_title">播放列表</string>
+    <string name="playlist_clear">清空列表</string>
+    <string name="playlist_now_playing">正在播放</string>
+
+    <!-- 默认值 -->
+    <string name="default_no_description">没有描述</string>
+    <string name="default_no_lyrics">暂无歌词</string>
+
+    <!-- 设置 -->
+    <string name="kaqiu_mode">卡球模式</string>
+    <string name="kaqiu_mode_subtitle">开启后会自动切换到卡球风格</string>
+
+    <!-- 上传对话框 -->
+    <string name="dialog_tip">提示</string>
+    <string name="dialog_upload_missing_info">您上传的音乐缺少以下信息：</string>
+    <string name="dialog_upload_missing_lyrics">• 歌词文件</string>
+    <string name="dialog_upload_missing_cover">• 封面图片</string>
+    <string name="dialog_upload_confirm">确定要继续上传吗？</string>
+    <string name="dialog_upload_continue">继续上传</string>
+
+    <!-- 按钮文本 -->
+    <string name="btn_preview">预览</string>
+    <string name="btn_pause">暂停</string>
+    <string name="btn_play">播放</string>
+
+    <!-- 状态文本 -->
+    <string name="status_no_lyrics_file">没有歌词文件</string>
+    <string name="status_lyrics_parse_failed">歌词解析失败</string>
+
+    <!-- 应用名称显示 -->
+    <string name="app_name_display">Neko云音乐</string>
 </resources>
