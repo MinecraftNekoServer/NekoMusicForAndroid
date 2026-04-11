@@ -16,6 +16,8 @@
     <string name="fuck_china_os_subtitle">在顶部状态栏中央显示播放控制。操你妈国产系统</string>
     <string name="desktop_lyric">桌面歌词</string>
     <string name="desktop_lyric_subtitle">在屏幕上方显示当前播放歌词</string>
+    <string name="kaqiu_mode">卡丘语模式</string>
+    <string name="kaqiu_mode_subtitle">开启后将在界面显示卡丘语（卡拉彼丘的喵～）</string>
     
     <!-- VR歌词无障碍服务 -->
     <string name="vr_lyric_accessibility_service_description">VR歌词HUD - 在VR环境中全局显示播放歌词</string>
@@ -423,7 +425,7 @@
     <string name="preview">预览</string>
     <string name="full_lyrics">完整歌词</string>
     <string name="parsing_metadata">正在解析音乐信息...</string>
-    <string name="please_select_language">请选择</string>
+    <string name="please_select_language">请选择歌曲语言</string>
     <string name="language_chinese">中文</string>
     <string name="language_cantonese">粤语</string>
     <string name="language_shanghainese">上海话</string>
@@ -513,4 +515,23 @@
     <string name="share_playlist_text">我在Neko云音乐发现了宝藏歌单 %s - https://music.cnmsb.xin/playlist/%d，里面超好听！大家快来听喵~</string>
     <string name="share_playlist">分享歌单</string>
     <string name="removed_from_playlist_success">已从歌单中移除</string>
+    
+    <!-- 确认上传 -->
+    <string name="confirm_upload">确认上传</string>
+    <string name="music_info">音乐信息</string>
+    <string name="music_title_label">标题: %s</string>
+    <string name="music_artist_label">艺术家: %s</string>
+    <string name="music_album_label">专辑: %s</string>
+    <string name="music_language_label">语言: %s</string>
+    <string name="music_duration_label">时长: %s</string>
+    <string name="music_tags_label">标签: %s</string>
+    <string name="file_status">文件状态</string>
+    <string name="audio_file_selected_status">音频文件: 已选择</string>
+    <string name="lyrics_file_selected_status">歌词文件: 已选择</string>
+    <string name="lyrics_file_not_selected_status">歌词文件: 未选择</string>
+    <string name="lyrics_file_not_required">歌词文件: 纯音乐不需要</string>
+    <string name="cover_image_selected_status">封面图片: 已选择</string>
+    <string name="cover_image_not_selected_status">封面图片: 未选择</string>
+    <string name="upload_review_notice">确认上传后将进入审核流程</string>
+    <string name="preview_audio">试听</string>
 </resources>

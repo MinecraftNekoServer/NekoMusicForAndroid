@@ -469,6 +469,25 @@
     <string name="share_playlist_text">I found a treasure playlist on Neko Music %s - https://music.cnmsb.xin/playlist/%d, it is amazing! Come and listen meow~</string>
     <string name="share_playlist">Share Playlist</string>
     <string name="removed_from_playlist_success">Removed from playlist</string>
+    
+    <!-- Upload Confirmation -->
+    <string name="confirm_upload">Confirm Upload</string>
+    <string name="music_info">Music Information</string>
+    <string name="music_title_label">Title: %s</string>
+    <string name="music_artist_label">Artist: %s</string>
+    <string name="music_album_label">Album: %s</string>
+    <string name="music_language_label">Language: %s</string>
+    <string name="music_duration_label">Duration: %s</string>
+    <string name="music_tags_label">Tags: %s</string>
+    <string name="file_status">File Status</string>
+    <string name="audio_file_selected_status">Audio file: Selected</string>
+    <string name="lyrics_file_selected_status">Lyrics file: Selected</string>
+    <string name="lyrics_file_not_selected_status">Lyrics file: Not selected</string>
+    <string name="lyrics_file_not_required">Lyrics file: Not required for instrumental music</string>
+    <string name="cover_image_selected_status">Cover image: Selected</string>
+    <string name="cover_image_not_selected_status">Cover image: Not selected</string>
+    <string name="upload_review_notice">After confirming upload, the content will enter the review process</string>
+    <string name="preview_audio">Preview</string>
     <string name="upload_music">Upload music</string>
     <string name="uploading">Uploading...</string>
     <string name="upload_success">Upload successful</string>
@@ -495,7 +514,7 @@
     <string name="preview">Preview</string>
     <string name="full_lyrics">Full Lyrics</string>
     <string name="parsing_metadata">Parsing music information...</string>
-    <string name="please_select_language">Please select</string>
+    <string name="please_select_language">Please select song language</string>
     <string name="language_chinese">Chinese</string>
     <string name="language_cantonese">Cantonese</string>
     <string name="language_shanghainese">Shanghainese</string>

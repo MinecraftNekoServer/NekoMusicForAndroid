@@ -132,7 +132,7 @@ fun parseLrcLyrics(lrcText: String): List<LrcLine> {
     val result = mutableListOf<LrcLine>()
 
     var i = 0
-    val timeRegex = Regex("\\[(\\d{2}):(\\d{2})\\.(\\d{2})\\]")
+    val timeRegex = Regex("\\[(\\d{2}):(\\d{2})\\.(\\d{1,5})\\]")
 
     while (i < lines.size) {
         val line = lines[i].trim()
@@ -143,14 +143,17 @@ fun parseLrcLyrics(lrcText: String): List<LrcLine> {
             continue
         }
 
-        // 解析时间戳 [mm:ss.xx]
+        // 解析时间戳 [mm:ss.xxxxx]
         val match = timeRegex.find(line)
 
         if (match != null) {
             val minutes = match.groupValues[1].toInt()
             val seconds = match.groupValues[2].toInt()
-            val centiseconds = match.groupValues[3].toInt()
-            val time = minutes * 60 + seconds + centiseconds / 100f
+            val millisecondsStr = match.groupValues[3]
+            val milliseconds = millisecondsStr.toInt()
+            // 根据毫秒位数计算小数部分
+            val divisor = Math.pow(10.0, millisecondsStr.length.toDouble()).toInt()
+            val time = minutes * 60 + seconds + milliseconds.toFloat() / divisor
 
             // 提取歌词文本
             val text = line.substring(match.range.last + 1).trim()
