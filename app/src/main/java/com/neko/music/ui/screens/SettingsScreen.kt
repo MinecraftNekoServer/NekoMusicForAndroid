@@ -94,7 +94,7 @@ fun SettingsScreen(
     
     // 语言设置
     val languagePrefs = remember { context.getSharedPreferences("app_settings", Context.MODE_PRIVATE) }
-    var currentLanguage by remember { mutableStateOf(languagePrefs.getString("language", "system") ?: "system") }
+    var currentLanguage by remember { mutableStateOf(languagePrefs.getString("language", "nya") ?: "nya") }
     var showLanguageDialog by remember { mutableStateOf(false) }
     
     // 卡丘语模式设置
@@ -860,7 +860,6 @@ fun LanguageSelectionDialog(
 ) {
     val isDarkTheme = isSystemInDarkTheme()
     val languages = listOf(
-        "system" to stringResource(id = R.string.language_follow_system),
         "zh" to stringResource(id = R.string.language_zh),
         "nya" to stringResource(id = R.string.language_nya),
         "en" to stringResource(id = R.string.language_en)
@@ -924,10 +923,9 @@ fun LanguageSelectionDialog(
 
 fun getLanguageDisplayName(context: Context, language: String): String {
     return when (language) {
-        "system" -> context.getString(R.string.language_follow_system)
         "zh" -> context.getString(R.string.language_zh)
         "nya" -> context.getString(R.string.language_nya)
         "en" -> context.getString(R.string.language_en)
-        else -> context.getString(R.string.language_follow_system)
+        else -> context.getString(R.string.language_nya)
     }
 }
