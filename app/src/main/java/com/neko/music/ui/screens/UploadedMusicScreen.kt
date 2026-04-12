@@ -16,6 +16,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.ArrowDropUp
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Pause
@@ -885,27 +887,31 @@ fun UploadMusicDialog(
                 )
                 
                 // 语言下拉选择
-                ExposedDropdownMenuBox(
-                    expanded = languageExpanded,
-                    onExpandedChange = { if (!isUploading) languageExpanded = it },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
+                Box {
                     OutlinedTextField(
                         value = language,
                         onValueChange = {},
                         readOnly = true,
                         label = { Text(stringResource(id = R.string.music_language)) },
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = languageExpanded) },
+                        trailingIcon = {
+                            Icon(
+                                imageVector = if (languageExpanded) Icons.Default.ArrowDropUp else Icons.Default.ArrowDropDown,
+                                contentDescription = null
+                            )
+                        },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .menuAnchor(),
+                            .clickable(enabled = !isUploading) {
+                                languageExpanded = !languageExpanded
+                            },
                         singleLine = true,
                         enabled = !isUploading
                     )
                     
-                    ExposedDropdownMenu(
+                    DropdownMenu(
                         expanded = languageExpanded,
-                        onDismissRequest = { languageExpanded = false }
+                        onDismissRequest = { languageExpanded = false },
+                        modifier = Modifier.fillMaxWidth(0.9f)
                     ) {
                         languageOptions.forEach { (displayName, value) ->
                             DropdownMenuItem(
