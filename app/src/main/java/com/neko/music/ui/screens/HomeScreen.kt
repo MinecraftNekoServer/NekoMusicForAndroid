@@ -126,6 +126,9 @@ fun HomeScreen(
                 if (playlistResponse.success && playlistResponse.playlists == null) {
                     loadError = true
                 }
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                // 协程被取消，不打印错误日志
+                playlistsLoading = false
             } catch (e: Exception) {
                 Log.e("HomeScreen", "推荐歌单异常: ${e.message}", e)
                 loadError = true

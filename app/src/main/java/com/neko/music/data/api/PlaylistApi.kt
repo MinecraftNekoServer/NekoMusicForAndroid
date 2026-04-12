@@ -157,6 +157,9 @@ class PlaylistApi(private val token: String?, private val context: android.conte
                 playlists = responseBody.results,
                 results = null
             )
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            // 协程被取消，不打印错误日志
+            PlaylistListResponse(false, "操作已取消", null)
         } catch (e: Exception) {
             Log.e("PlaylistApi", "搜索歌单异常: ${e.message}", e)
             PlaylistListResponse(false, "网络错误: ${e.message}", null)

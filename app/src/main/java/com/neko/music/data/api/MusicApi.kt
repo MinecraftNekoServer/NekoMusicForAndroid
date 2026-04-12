@@ -230,6 +230,9 @@ class MusicApi(private val context: Context) {
                 Log.e("MusicApi", "Ranking fetch failed: $message")
                 Result.failure(Exception(message))
             }
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            // 协程被取消，不打印错误日志
+            Result.failure(e)
         } catch (e: Exception) {
             Log.e("MusicApi", "Ranking fetch error", e)
             Result.failure(e)
@@ -268,6 +271,9 @@ class MusicApi(private val context: Context) {
                 Log.e("MusicApi", "Latest music fetch failed: $message")
                 Result.failure(Exception(message))
             }
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            // 协程被取消，不打印错误日志
+            Result.failure(e)
         } catch (e: Exception) {
             Log.e("MusicApi", "Latest music fetch error", e)
             Result.failure(e)
