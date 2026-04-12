@@ -846,7 +846,12 @@ fun MainScreen() {
                 )
             ) { backStackEntry ->
                 val query = backStackEntry.arguments?.getString("query") ?: ""
-                Log.d("MainActivity", "搜索页面加载，查询: $query")
+                
+                // 使用 LaunchedEffect 确保日志只在首次加载时输出一次
+                androidx.compose.runtime.LaunchedEffect(query) {
+                    Log.d("MainActivity", "搜索页面加载，查询: $query")
+                }
+                
                 SearchResultScreen(
                     initialQuery = query,
                     onBackClick = {
@@ -898,7 +903,12 @@ fun MainScreen() {
                 } else {
                     null
                 }
-                Log.d("MainActivity", "歌手详情页面加载: $artistName")
+                
+                // 使用 LaunchedEffect 确保日志只在首次加载时输出一次
+                androidx.compose.runtime.LaunchedEffect(artistName) {
+                    Log.d("MainActivity", "歌手详情页面加载: $artistName")
+                }
+                
                 ArtistDetailScreen(
                     artistName = artistName,
                     musicCount = musicCount,
@@ -931,7 +941,12 @@ fun MainScreen() {
                     backStackEntry.arguments?.getString("artist") ?: "", "UTF-8"
                 )
                 val music = Music(id, title, artist, "", 0, "", "", 0, "")
-                Log.d("MainActivity", "播放页面加载: $title")
+                
+                // 使用 LaunchedEffect 确保日志只在首次加载时输出一次
+                androidx.compose.runtime.LaunchedEffect(music.id) {
+                    Log.d("MainActivity", "播放页面加载: $title")
+                }
+                
                 PlayerScreen(
                     music = music,
                     onBackClick = {
