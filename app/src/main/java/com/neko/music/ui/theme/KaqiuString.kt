@@ -46,3 +46,22 @@ fun Context.getKaqiuString(resourceId: Int, vararg formatArgs: Any): String {
     val originalText = this.getString(resourceId, *formatArgs)
     return KaqiuLanguageUtil.getText(this, originalText)
 }
+
+/**
+ * Composable函数 - 获取卡丘语字符串资源
+ * 用于在Composable中直接获取卡丘语字符串
+ */
+@Composable
+fun kaqiuStringResource(resourceId: Int): String {
+    val context = LocalContext.current
+    return context.getKaqiuString(resourceId)
+}
+
+/**
+ * Composable函数 - 获取卡丘语字符串资源（带格式参数）
+ */
+@Composable
+fun kaqiuStringResource(resourceId: Int, vararg formatArgs: Any): String {
+    val context = LocalContext.current
+    return context.getKaqiuString(resourceId, *formatArgs)
+}
