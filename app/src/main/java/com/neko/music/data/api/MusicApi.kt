@@ -53,38 +53,6 @@ class MusicApi(private val context: Context) {
 
     private val baseUrl = "https://music.cnmsb.xin"
     private val cacheManager = MusicCacheManager.getInstance(context)
-
-    // ACW 挑战求解器
-    private val acwChallengeSolver = com.neko.music.data.manager.ACWChallengeSolver(context)
-
-    // 全局 Cookie 缓存
-    private val app = context.applicationContext as com.neko.music.NekoMusicApplication
-
-    /**
-     * 获取 Cookie（优先使用缓存）
-     */
-    private suspend fun getCookie(): String? {
-        // 先尝试使用缓存的 Cookie
-        val cachedCookie = app.getCachedCookie()
-        if (cachedCookie != null) {
-            return cachedCookie
-        }
-
-        // 缓存失效，重新获取
-        try {
-            val newCookie = acwChallengeSolver.getCookie()
-            if (newCookie != null) {
-                app.setCachedCookie(newCookie)
-            }
-            return newCookie
-        } catch (e: kotlinx.coroutines.CancellationException) {
-            // 协程被取消，不打印错误日志
-            return null
-        } catch (e: Exception) {
-            Log.e("MusicApi", "获取 ACW Cookie 失败", e)
-            return null
-        }
-    }
     
     suspend fun searchMusic(query: String): Result<List<Music>> {
         return try {
@@ -93,15 +61,9 @@ class MusicApi(private val context: Context) {
             val requestBody = json.encodeToString(searchRequest)
             Log.d("MusicApi", "Request body JSON: $requestBody")
 
-            // 获取 ACW Cookie
-            val cookie = getCookie()
-
             val url = "$baseUrl/api/music/search"
             val response = client.post(url) {
                 contentType(Json)
-                if (cookie != null) {
-                    header("Cookie", cookie)
-                }
                 setBody(requestBody)
             }
             
@@ -159,15 +121,8 @@ class MusicApi(private val context: Context) {
         return try {
             Log.d("MusicApi", "Fetching lyrics for music: ${music.id}")
 
-            // 获取 ACW Cookie
-            val cookie = getCookie()
-
             val url = "$baseUrl/api/music/lyrics/${music.id}?t=${System.currentTimeMillis()}"
-            val response = client.get(url) {
-                if (cookie != null) {
-                    header("Cookie", cookie)
-                }
-            }
+            val response = client.get(url)
             Log.d("MusicApi", "Response status: ${response.status}")
             val responseText = response.body<String>()
             Log.d("MusicApi", "Response raw text: $responseText")
@@ -202,15 +157,8 @@ class MusicApi(private val context: Context) {
         return try {
             Log.d("MusicApi", "Fetching ranking with limit: $limit")
 
-            // 获取 ACW Cookie
-            val cookie = getCookie()
-
             val url = "$baseUrl/api/music/ranking?limit=$limit&t=${System.currentTimeMillis()}"
-            val response = client.get(url) {
-                if (cookie != null) {
-                    header("Cookie", cookie)
-                }
-            }
+            val response = client.get(url)
             Log.d("MusicApi", "Response status: ${response.status}")
             val responseText = response.body<String>()
             Log.d("MusicApi", "Response raw text: $responseText")
@@ -243,15 +191,8 @@ class MusicApi(private val context: Context) {
         return try {
             Log.d("MusicApi", "Fetching latest music with limit: $limit")
 
-            // 获取 ACW Cookie
-            val cookie = getCookie()
-
             val url = "$baseUrl/api/music/latest?limit=$limit&t=${System.currentTimeMillis()}"
-            val response = client.get(url) {
-                if (cookie != null) {
-                    header("Cookie", cookie)
-                }
-            }
+            val response = client.get(url)
             Log.d("MusicApi", "Response status: ${response.status}")
             val responseText = response.body<String>()
             Log.d("MusicApi", "Response raw text: $responseText")
