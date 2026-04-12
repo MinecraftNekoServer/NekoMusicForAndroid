@@ -38,6 +38,8 @@ import androidx.compose.ui.unit.sp
 import com.neko.music.data.manager.AppUpdateManager
 import com.neko.music.data.manager.UpdateInfo
 import com.neko.music.ui.theme.RoseRed
+import com.neko.music.ui.theme.getKaqiuString
+import com.neko.music.ui.theme.kaqiuStringResource
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -92,8 +94,11 @@ fun SettingsScreen(
     
     // 语言设置
     val languagePrefs = remember { context.getSharedPreferences("app_settings", Context.MODE_PRIVATE) }
-    var currentLanguage by remember { mutableStateOf(languagePrefs.getString("language", "system") ?: "system") }
+    var currentLanguage by remember { mutableStateOf(languagePrefs.getString("language", "nya") ?: "nya") }
     var showLanguageDialog by remember { mutableStateOf(false) }
+    
+    // 卡丘语模式设置
+    var isKaqiuModeEnabled by remember { mutableStateOf(languagePrefs.getBoolean("kaqiu_mode_enabled", false)) }
     
     // 悬浮窗权限检查
     var hasOverlayPermission by remember {
@@ -224,28 +229,6 @@ fun SettingsScreen(
     }
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { 
-                    Text(
-                        stringResource(id = R.string.settings),
-                        color = if (isSystemInDarkTheme()) Color(0xFFF0F0F5).copy(alpha = 0.95f) else Color.Black
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBackClick) {
-                        Icon(
-                            Icons.Default.ArrowBack,
-                            contentDescription = stringResource(id = R.string.back),
-                            tint = if (isSystemInDarkTheme()) Color(0xFFB8B8D1).copy(alpha = 0.9f) else Color.Black
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = if (isSystemInDarkTheme()) Color(0xFF1A1A2E).copy(alpha = 0.95f) else Color.White
-                )
-            )
-        }
     ) { paddingValues ->
         Box(
             modifier = Modifier
@@ -284,14 +267,14 @@ fun SettingsScreen(
                         ) {
                             Column {
                                 Text(
-                                    text = stringResource(id = R.string.app_name),
+                                    text = kaqiuStringResource(resourceId = R.string.app_name),
                                     fontSize = 20.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = if (isSystemInDarkTheme()) Color(0xFFF0F0F5).copy(alpha = 0.95f) else Color.Black
                                 )
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(
-                                    text = "${stringResource(id = R.string.version)} $versionName ($versionCode)",
+                                    text = "${kaqiuStringResource(resourceId = R.string.version)} $versionName ($versionCode)",
                                     fontSize = 14.sp,
                                     color = if (isSystemInDarkTheme()) Color(0xFFB8B8D1).copy(alpha = 0.8f) else Color.Gray
                                 )
@@ -323,11 +306,11 @@ fun SettingsScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                SettingSection(title = stringResource(id = R.string.general)) {
+                SettingSection(title = kaqiuStringResource(resourceId = R.string.general)) {
                     SettingSwitchItem(
                         icon = Icons.Default.Info,
-                        title = stringResource(id = R.string.cache_enabled),
-                        subtitle = stringResource(id = R.string.cache_enabled_subtitle),
+                        title = kaqiuStringResource(resourceId = R.string.cache_enabled),
+                        subtitle = kaqiuStringResource(resourceId = R.string.cache_enabled_subtitle),
                         checked = isCacheEnabled,
                         onCheckedChange = { enabled ->
                             isCacheEnabled = enabled
@@ -338,16 +321,16 @@ fun SettingsScreen(
                     if (isCacheEnabled) {
                         SettingItem(
                             icon = Icons.Default.Info,
-                            title = stringResource(id = R.string.cache_management),
-                            subtitle = stringResource(id = R.string.cached_songs, cachedMusicCount, cacheSize),
+                            title = kaqiuStringResource(resourceId = R.string.cache_management),
+                            subtitle = kaqiuStringResource(resourceId = R.string.cached_songs, cachedMusicCount, cacheSize),
                             onClick = { onNavigateToCache() }
                         )
                     }
                     
                     SettingSwitchItem(
                         icon = Icons.Default.Info,
-                        title = stringResource(id = R.string.focus_lock),
-                        subtitle = stringResource(id = R.string.focus_lock_subtitle),
+                        title = kaqiuStringResource(resourceId = R.string.focus_lock),
+                        subtitle = kaqiuStringResource(resourceId = R.string.focus_lock_subtitle),
                         checked = isFocusLockEnabled,
                         onCheckedChange = { enabled ->
                             isFocusLockEnabled = enabled
@@ -361,9 +344,20 @@ fun SettingsScreen(
                     
                     SettingItem(
                         icon = Icons.Default.Info,
-                        title = stringResource(id = R.string.language),
+                        title = kaqiuStringResource(resourceId = R.string.language),
                         subtitle = getLanguageDisplayName(context, currentLanguage),
                         onClick = { showLanguageDialog = true }
+                    )
+                    
+                    SettingSwitchItem(
+                        icon = Icons.Default.Info,
+                        title = kaqiuStringResource(resourceId = R.string.kaqiu_mode),
+                        subtitle = kaqiuStringResource(resourceId = R.string.kaqiu_mode_subtitle),
+                        checked = isKaqiuModeEnabled,
+                        onCheckedChange = { enabled ->
+                            isKaqiuModeEnabled = enabled
+                            languagePrefs.edit().putBoolean("kaqiu_mode_enabled", enabled).apply()
+                        }
                     )
                 }
 
@@ -866,7 +860,6 @@ fun LanguageSelectionDialog(
 ) {
     val isDarkTheme = isSystemInDarkTheme()
     val languages = listOf(
-        "system" to stringResource(id = R.string.language_follow_system),
         "zh" to stringResource(id = R.string.language_zh),
         "nya" to stringResource(id = R.string.language_nya),
         "en" to stringResource(id = R.string.language_en)
@@ -930,10 +923,9 @@ fun LanguageSelectionDialog(
 
 fun getLanguageDisplayName(context: Context, language: String): String {
     return when (language) {
-        "system" -> context.getString(R.string.language_follow_system)
         "zh" -> context.getString(R.string.language_zh)
         "nya" -> context.getString(R.string.language_nya)
         "en" -> context.getString(R.string.language_en)
-        else -> context.getString(R.string.language_follow_system)
+        else -> context.getString(R.string.language_nya)
     }
 }

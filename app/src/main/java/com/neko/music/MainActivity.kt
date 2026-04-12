@@ -322,7 +322,7 @@ fun MainScreen() {
             val currentMusicTitle = playerManager.currentMusicTitle.value
 
             // 如果没有音乐信息，才恢复上次播放
-            if (currentMusicId == null || currentMusicTitle == null || currentMusicTitle == "未知歌曲") {
+            if (currentMusicId == null || currentMusicTitle == null || currentMusicTitle == context.getString(R.string.default_unknown_song)) {
                 playerManager.restoreLastPlayed(context)
                 // 等待音乐恢复播放后再检查收藏状态
                 kotlinx.coroutines.delay(1000) // 等待1秒确保音乐信息已加载
@@ -777,7 +777,7 @@ fun MainScreen() {
                                     "MainActivity",
                                     "Token: ${if (token != null) "已获取 (${token.length} 字符)" else "null"}"
                                 )
-                                val userApi = com.neko.music.data.api.UserApi(token)
+                                val userApi = com.neko.music.data.api.UserApi(token = token, context = context)
                                 Log.d("MainActivity", "UserApi 实例已创建")
                                 val response = userApi.updateAvatar(imageData)
                                 Log.d(
@@ -801,8 +801,9 @@ fun MainScreen() {
                     onPasswordUpdate = { oldPassword, newPassword ->
                         try {
                             val userApi = com.neko.music.data.api.UserApi(
-                                com.neko.music.data.manager.TokenManager(context)
-                                    .getToken()
+                                token = com.neko.music.data.manager.TokenManager(context)
+                                    .getToken(),
+                                context = context
                             )
                             val response =
                                 userApi.updatePassword(oldPassword, newPassword)
@@ -845,7 +846,12 @@ fun MainScreen() {
                 )
             ) { backStackEntry ->
                 val query = backStackEntry.arguments?.getString("query") ?: ""
-                Log.d("MainActivity", "搜索页面加载，查询: $query")
+                
+                // 使用 LaunchedEffect 确保日志只在首次加载时输出一次
+                androidx.compose.runtime.LaunchedEffect(query) {
+                    Log.d("MainActivity", "搜索页面加载，查询: $query")
+                }
+                
                 SearchResultScreen(
                     initialQuery = query,
                     onBackClick = {
@@ -897,7 +903,12 @@ fun MainScreen() {
                 } else {
                     null
                 }
-                Log.d("MainActivity", "歌手详情页面加载: $artistName")
+                
+                // 使用 LaunchedEffect 确保日志只在首次加载时输出一次
+                androidx.compose.runtime.LaunchedEffect(artistName) {
+                    Log.d("MainActivity", "歌手详情页面加载: $artistName")
+                }
+                
                 ArtistDetailScreen(
                     artistName = artistName,
                     musicCount = musicCount,
@@ -930,7 +941,12 @@ fun MainScreen() {
                     backStackEntry.arguments?.getString("artist") ?: "", "UTF-8"
                 )
                 val music = Music(id, title, artist, "", 0, "", "", 0, "")
-                Log.d("MainActivity", "播放页面加载: $title")
+                
+                // 使用 LaunchedEffect 确保日志只在首次加载时输出一次
+                androidx.compose.runtime.LaunchedEffect(music.id) {
+                    Log.d("MainActivity", "播放页面加载: $title")
+                }
+                
                 PlayerScreen(
                     music = music,
                     onBackClick = {
@@ -988,7 +1004,7 @@ fun MainScreen() {
 
                                     isPlaying = isPlaying,
 
-                                    songTitle = currentMusicTitle ?: "暂无播放",
+                                    songTitle = currentMusicTitle ?: context.getString(R.string.default_no_play),
 
                                     artist = currentMusicArtist ?: "",
 
@@ -1010,13 +1026,13 @@ fun MainScreen() {
 
                                         val encodedTitle = java.net.URLEncoder.encode(
 
-                                            currentMusicTitle ?: "未知歌曲", "UTF-8"
+                                            currentMusicTitle ?: context.getString(R.string.default_unknown_song), "UTF-8"
 
                                         )
 
                                         val encodedArtist = java.net.URLEncoder.encode(
 
-                                            currentMusicArtist ?: "未知歌手", "UTF-8"
+                                            currentMusicArtist ?: context.getString(R.string.default_unknown_artist), "UTF-8"
 
                                         )
 
@@ -1226,8 +1242,14 @@ fun MainScreen() {
             if (showLogoutDialog) {
                 androidx.compose.material3.AlertDialog(
                     onDismissRequest = { showLogoutDialog = false },
-                    title = { Text("退出登录") },
-                    text = { Text("确定要退出登录吗？") },
+                    title = { 
+                        val title = context.getString(R.string.dialog_logout_title)
+                        Text(title)
+                    },
+                    text = { 
+                        val message = context.getString(R.string.dialog_logout_message)
+                        Text(message)
+                    },
                     confirmButton = {
                         androidx.compose.material3.TextButton(
                             onClick = {
@@ -1241,14 +1263,16 @@ fun MainScreen() {
                                 showLogoutDialog = false
                             }
                         ) {
-                            Text("确定")
+                            val confirmText = context.getString(R.string.dialog_confirm)
+                            Text(confirmText)
                         }
                     },
                     dismissButton = {
                         androidx.compose.material3.TextButton(
                             onClick = { showLogoutDialog = false }
                         ) {
-                            Text("取消")
+                            val cancelText = context.getString(R.string.dialog_cancel)
+                            Text(cancelText)
                         }
                     }
                 )

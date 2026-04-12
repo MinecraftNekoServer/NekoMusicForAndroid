@@ -468,5 +468,68 @@
     <string name="share_playlist_text">我在Neko云音乐发现了宝藏本本 %s - https://music.cnmsb.xin/playlist/%d，里面超好听喵！快来听听看喵~</string>
     <string name="share_playlist">分一本本喵</string>
     <string name="removed_from_playlist_success">从本本里踢出去了喵</string>
-    <string name="not_required_for_instrumental">纯音乐不要歌词文件喵</string>
+
+    <!-- 默认值字符串 -->
+    <string name="default_unknown_song">不知道名字的歌喵</string>
+    <string name="default_no_play">现在安安静静的喵</string>
+    <string name="default_unknown_artist">没留下姓名的歌手喵</string>
+
+    <!-- 对话框字符串 -->
+    <string name="dialog_logout_title">真的要走吗喵？</string>
+    <string name="dialog_logout_message">主人要解除认领了吗喵？</string>
+    <string name="dialog_confirm">就是这样喵！</string>
+    <string name="dialog_cancel">算啦喵</string>
+    <string name="dialog_close">关掉喵</string>
+
+    <!-- 歌单字符串 -->
+    <string name="playlist_title">本本列表喵</string>
+    <string name="playlist_clear">清空本本喵</string>
+    <string name="playlist_now_playing">正在哼唱喵</string>
+
+    <!-- 默认值 -->
+    <string name="default_no_description">这个猫娘很懒，什么都没写喵</string>
+    <string name="default_no_lyrics">还没人写歌词喵</string>
+
+    <!-- 设置 -->
+    <string name="kaqiu_mode">卡球模式喵</string>
+    <string name="kaqiu_mode_subtitle">开启后会自动切换到卡球风格喵</string>
+
+    <!-- 上传对话框 -->
+    <string name="dialog_tip">提示喵</string>
+    <string name="dialog_upload_missing_info">主人投喂的音乐缺了点东西喵：</string>
+    <string name="dialog_upload_missing_lyrics">• 歌词文件喵</string>
+    <string name="dialog_upload_missing_cover">• 封面图片喵</string>
+    <string name="dialog_upload_confirm">确定要继续投喂吗喵？</string>
+    <string name="dialog_upload_continue">继续投喂喵</string>
+
+    <!-- 上传确认 -->
+    <string name="confirm_upload">确认投喂喵</string>
+    <string name="music_info">曲子信息喵</string>
+    <string name="music_title_label">曲名: %s 喵</string>
+    <string name="music_artist_label">歌手: %s 喵</string>
+    <string name="music_album_label">专辑: %s 喵</string>
+    <string name="music_language_label">方言: %s 喵</string>
+    <string name="music_duration_label">时长: %s 喵</string>
+    <string name="music_tags_label">标签: %s 喵</string>
+    <string name="file_status">文件状态喵</string>
+    <string name="audio_file_selected_status">音频文件: 已选喵</string>
+    <string name="lyrics_file_selected_status">歌词文件: 已选喵</string>
+    <string name="lyrics_file_not_selected_status">歌词文件: 没选喵</string>
+    <string name="lyrics_file_not_required">歌词文件: 纯音乐不需要喵</string>
+    <string name="cover_image_selected_status">封面图片: 已选喵</string>
+    <string name="cover_image_not_selected_status">封面图片: 没选喵</string>
+    <string name="upload_review_notice">确认投喂后，内容将进入审核流程喵</string>
+    <string name="preview_audio">先听听听喵</string>
+
+    <!-- 按钮文本 -->
+    <string name="btn_preview">预览喵</string>
+    <string name="btn_pause">暂停喵</string>
+    <string name="btn_play">播放喵</string>
+
+    <!-- 状态文本 -->
+    <string name="status_no_lyrics_file">没有歌词文件喵</string>
+    <string name="status_lyrics_parse_failed">歌词解析失败喵</string>
+
+    <!-- 应用名称显示 -->
+    <string name="app_name_display">Neko云音乐</string>
 </resources>

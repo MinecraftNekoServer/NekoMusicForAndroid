@@ -85,7 +85,7 @@ fun UploadedMusicScreen(
         if (token != null) {
             isRefreshing = true
             try {
-                val userApi = com.neko.music.data.api.UserApi(token)
+                val userApi = com.neko.music.data.api.UserApi(token = token, context = context)
                 val response = userApi.getUploadedMusic()
                 if (response.success) {
                     musicList = response.musicList
@@ -109,7 +109,7 @@ fun UploadedMusicScreen(
             // 调用API获取上传音乐列表
             scope.launch {
                 try {
-                    val userApi = com.neko.music.data.api.UserApi(token)
+                    val userApi = com.neko.music.data.api.UserApi(token = token, context = context)
                     val response = userApi.getUploadedMusic()
                     if (response.success) {
                         musicList = response.musicList
@@ -187,7 +187,7 @@ fun UploadedMusicScreen(
                             isLoading = true
                             scope.launch {
                                 try {
-                                    val userApi = com.neko.music.data.api.UserApi(token)
+                                    val userApi = com.neko.music.data.api.UserApi(token = token, context = context)
                                     val response = userApi.getUploadedMusic()
                                     if (response.success) {
                                         musicList = response.musicList
@@ -238,7 +238,7 @@ fun UploadedMusicScreen(
                 isLoading = true
                 scope.launch {
                     try {
-                        val userApi = com.neko.music.data.api.UserApi(token)
+                        val userApi = com.neko.music.data.api.UserApi(token = token, context = context)
                         val response = userApi.getUploadedMusic()
                         if (response.success) {
                             musicList = response.musicList
@@ -1046,35 +1046,35 @@ fun UploadMusicDialog(
             onDismissRequest = { showMissingInfoDialog = false },
             title = {
                 Text(
-                    text = "提示",
+                    text = stringResource(id = R.string.dialog_tip),
                     fontWeight = FontWeight.Bold
                 )
             },
             text = {
                 Column {
                     Text(
-                        text = "您上传的音乐缺少以下信息：",
+                        text = stringResource(id = R.string.dialog_upload_missing_info),
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Medium
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     if (missingLyrics) {
                         Text(
-                            text = "• 歌词文件",
+                            text = stringResource(id = R.string.dialog_upload_missing_lyrics),
                             fontSize = 14.sp,
                             color = MaterialTheme.colorScheme.error
                         )
                     }
                     if (missingCover) {
                         Text(
-                            text = "• 封面图片",
+                            text = stringResource(id = R.string.dialog_upload_missing_cover),
                             fontSize = 14.sp,
                             color = MaterialTheme.colorScheme.error
                         )
                     }
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "是否继续上传？",
+                        text = stringResource(id = R.string.dialog_upload_confirm),
                         fontSize = 14.sp
                     )
                 }
@@ -1089,7 +1089,7 @@ fun UploadMusicDialog(
                         containerColor = RoseRed
                     )
                 ) {
-                    Text("继续上传")
+                    Text(stringResource(id = R.string.dialog_upload_continue))
                 }
             },
             dismissButton = {
@@ -1122,7 +1122,7 @@ fun UploadMusicDialog(
             onDismissRequest = { showPreviewDialog = false },
             title = {
                 Text(
-                    text = "确认上传",
+                    text = stringResource(id = R.string.confirm_upload),
                     fontWeight = FontWeight.Bold
                 )
             },
@@ -1144,38 +1144,38 @@ fun UploadMusicDialog(
                             verticalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
                             Text(
-                                text = "音乐信息",
+                                text = stringResource(id = R.string.music_info),
                                 fontSize = 12.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Text(
-                                text = "标题: $title",
+                                text = stringResource(id = R.string.music_title_label, title),
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Medium
                             )
                             Text(
-                                text = "艺术家: $artist",
+                                text = stringResource(id = R.string.music_artist_label, artist),
                                 fontSize = 14.sp
                             )
                             if (album.isNotBlank()) {
                                 Text(
-                                    text = "专辑: $album",
+                                    text = stringResource(id = R.string.music_album_label, album),
                                     fontSize = 14.sp
                                 )
                             }
                             Text(
-                                text = "语言: $language",
+                                text = stringResource(id = R.string.music_language_label, language),
                                 fontSize = 14.sp
                             )
                             if (duration.isNotBlank()) {
                                 Text(
-                                    text = "时长: $duration",
+                                    text = stringResource(id = R.string.music_duration_label, duration),
                                     fontSize = 14.sp
                                 )
                             }
                             if (tags.isNotBlank()) {
                                 Text(
-                                    text = "标签: $tags",
+                                    text = stringResource(id = R.string.music_tags_label, tags),
                                     fontSize = 14.sp
                                 )
                             }
@@ -1196,45 +1196,45 @@ fun UploadMusicDialog(
                             verticalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
                             Text(
-                                text = "文件状态",
+                                text = stringResource(id = R.string.file_status),
                                 fontSize = 12.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Text(
-                                text = "音频文件: 已选择",
+                                text = stringResource(id = R.string.audio_file_selected_status),
                                 fontSize = 14.sp,
                                 color = MaterialTheme.colorScheme.primary
                             )
                             if (language != stringResource(id = R.string.language_instrumental)) {
                                 if (lyricsFile != null) {
                                     Text(
-                                        text = "歌词文件: 已选择",
+                                        text = stringResource(id = R.string.lyrics_file_selected_status),
                                         fontSize = 14.sp,
                                         color = MaterialTheme.colorScheme.primary
                                     )
                                 } else {
                                     Text(
-                                        text = "歌词文件: 未选择",
+                                        text = stringResource(id = R.string.lyrics_file_not_selected_status),
                                         fontSize = 14.sp,
                                         color = MaterialTheme.colorScheme.error
                                     )
                                 }
                             } else {
                                 Text(
-                                    text = "歌词文件: 纯音乐不需要",
+                                    text = stringResource(id = R.string.lyrics_file_not_required),
                                     fontSize = 14.sp,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                             if (coverImage != null || coverBitmap != null) {
                                 Text(
-                                    text = "封面图片: 已选择",
+                                    text = stringResource(id = R.string.cover_image_selected_status),
                                     fontSize = 14.sp,
                                     color = MaterialTheme.colorScheme.primary
                                 )
                             } else {
                                 Text(
-                                    text = "封面图片: 未选择",
+                                    text = stringResource(id = R.string.cover_image_not_selected_status),
                                     fontSize = 14.sp,
                                     color = MaterialTheme.colorScheme.error
                                 )
@@ -1245,7 +1245,7 @@ fun UploadMusicDialog(
                     Spacer(modifier = Modifier.height(8.dp))
                     
                     Text(
-                        text = "确认上传后将进入审核流程",
+                        text = stringResource(id = R.string.upload_review_notice),
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -1266,7 +1266,7 @@ fun UploadMusicDialog(
                             containerColor = MaterialTheme.colorScheme.secondary
                         )
                     ) {
-                        Text("试听")
+                        Text(stringResource(id = R.string.preview_audio))
                     }
                     
                     // 确认上传按钮
@@ -1309,9 +1309,9 @@ fun UploadMusicDialog(
                                             uploadProgress = (uploadProgress + 5f).coerceAtMost(95f)
                                         }
                                     }
-                                    
+
                                     if (audioBytes != null) {
-                                        val userApi = com.neko.music.data.api.UserApi(token)
+                                        val userApi = com.neko.music.data.api.UserApi(token = token, context = context)
                                         
                                         val response = userApi.uploadMusic(
                                             audioFile = audioBytes,
@@ -1543,7 +1543,7 @@ private fun PreviewPlayDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(
-                text = "试听",
+                text = stringResource(id = R.string.btn_preview),
                 fontWeight = FontWeight.Bold
             )
         },
@@ -1601,7 +1601,7 @@ private fun PreviewPlayDialog(
                     ) {
                         Icon(
                             imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                            contentDescription = if (isPlaying) "暂停" else "播放",
+                            contentDescription = if (isPlaying) stringResource(id = R.string.btn_pause) else stringResource(id = R.string.btn_play),
                             modifier = Modifier.fillMaxSize(),
                             tint = RoseRed
                         )
@@ -1672,7 +1672,7 @@ private fun PreviewPlayDialog(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = if (lyricsText == null) "无歌词文件" else "歌词解析失败",
+                            text = if (lyricsText == null) stringResource(id = R.string.status_no_lyrics_file) else stringResource(id = R.string.status_lyrics_parse_failed),
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
@@ -1689,7 +1689,7 @@ private fun PreviewPlayDialog(
                     containerColor = RoseRed
                 )
             ) {
-                Text("关闭")
+                Text(stringResource(id = R.string.dialog_close))
             }
         }
     )

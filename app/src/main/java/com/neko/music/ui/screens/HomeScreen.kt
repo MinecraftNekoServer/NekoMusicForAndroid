@@ -126,6 +126,9 @@ fun HomeScreen(
                 if (playlistResponse.success && playlistResponse.playlists == null) {
                     loadError = true
                 }
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                // 协程被取消，不打印错误日志
+                playlistsLoading = false
             } catch (e: Exception) {
                 Log.e("HomeScreen", "推荐歌单异常: ${e.message}", e)
                 loadError = true
@@ -1475,14 +1478,13 @@ fun PlaylistCard(
             modifier = Modifier.width(160.dp)
         )
         
-        Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(4.dp))
         
-        // 歌单描述
-        Text(
-            text = playlist.description ?: "暂无描述",
-            fontSize = 12.sp,
-            color = RoseRed.copy(alpha = 0.7f),
-            maxLines = 1,
+                    // 歌单描述
+                    Text(
+                        text = playlist.description ?: stringResource(id = R.string.default_no_description),
+                        fontSize = 12.sp,
+                        color = RoseRed.copy(alpha = 0.7f),            maxLines = 1,
             overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
             modifier = Modifier.width(160.dp)
         )

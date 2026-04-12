@@ -401,6 +401,56 @@
     
     <!-- Splash Screen -->
     <string name="lyrics_file_read_failed">Failed to read lyrics file</string>
+    
+    <!-- Default Values -->
+    <string name="default_unknown_song">Unknown Song</string>
+    <string name="default_unknown_artist">Unknown Artist</string>
+    <string name="default_no_play">Not Playing</string>
+    <string name="default_no_lyrics">No Lyrics</string>
+    <string name="default_no_description">No Description</string>
+    
+    <!-- Dialogs -->
+    <string name="dialog_logout_title">Logout</string>
+    <string name="dialog_logout_message">Are you sure you want to logout?</string>
+    <string name="dialog_confirm">Confirm</string>
+    <string name="dialog_cancel">Cancel</string>
+    <string name="dialog_tip">Tip</string>
+    <string name="dialog_upload_missing_info">Your uploaded music is missing the following information:</string>
+    <string name="dialog_upload_missing_lyrics">• Lyrics file</string>
+    <string name="dialog_upload_missing_cover">• Cover image</string>
+    <string name="dialog_upload_confirm">Do you want to continue uploading?</string>
+    <string name="dialog_upload_continue">Continue Upload</string>
+    <string name="dialog_close">Close</string>
+    <string name="kaqiu_mode">Kaqiu Mode</string>
+    <string name="kaqiu_mode_subtitle">Enable to switch to Kaqiu style</string>
+
+    <!-- Playlist -->
+    <string name="playlist_title">Playlist</string>
+    <string name="playlist_clear">Clear</string>
+    <string name="playlist_now_playing">Now Playing</string>
+    
+    <!-- Buttons and Actions -->
+    <string name="btn_previous">Previous</string>
+    <string name="btn_next">Next</string>
+    <string name="btn_play">Play</string>
+    <string name="btn_pause">Pause</string>
+    <string name="btn_favorite">Favorite</string>
+    <string name="btn_unfavorite">Unfavorite</string>
+    <string name="btn_back">Back</string>
+    <string name="btn_share">Share</string>
+    <string name="btn_remove">Remove</string>
+    <string name="btn_lyrics">Lyrics</string>
+    <string name="btn_preview">Preview</string>
+    
+    <!-- Content Descriptions -->
+    <string name="content_description_creator_avatar">Creator Avatar</string>
+    <string name="content_description_playlist_cover">Playlist Cover</string>
+    
+    <!-- Status Text -->
+    <string name="status_instrumental_no_lyrics">Lyrics not required for instrumental music</string>
+    <string name="status_no_lyrics_file">No lyrics file</string>
+    <string name="status_lyrics_parse_failed">Lyrics parse failed</string>
+
     <string name="splash_slogan">Hear Your World</string>
     
     <!-- Auth Error -->
@@ -470,6 +520,25 @@
     <string name="share_playlist_text">I found a treasure playlist on Neko Music %s - https://music.cnmsb.xin/playlist/%d, it is amazing! Come and listen meow~</string>
     <string name="share_playlist">Share Playlist</string>
     <string name="removed_from_playlist_success">Removed from playlist</string>
+    
+    <!-- Upload Confirmation -->
+    <string name="confirm_upload">Confirm Upload</string>
+    <string name="music_info">Music Information</string>
+    <string name="music_title_label">Title: %s</string>
+    <string name="music_artist_label">Artist: %s</string>
+    <string name="music_album_label">Album: %s</string>
+    <string name="music_language_label">Language: %s</string>
+    <string name="music_duration_label">Duration: %s</string>
+    <string name="music_tags_label">Tags: %s</string>
+    <string name="file_status">File Status</string>
+    <string name="audio_file_selected_status">Audio file: Selected</string>
+    <string name="lyrics_file_selected_status">Lyrics file: Selected</string>
+    <string name="lyrics_file_not_selected_status">Lyrics file: Not selected</string>
+    <string name="lyrics_file_not_required">Lyrics file: Not required for instrumental music</string>
+    <string name="cover_image_selected_status">Cover image: Selected</string>
+    <string name="cover_image_not_selected_status">Cover image: Not selected</string>
+    <string name="upload_review_notice">After confirming upload, the content will enter the review process</string>
+    <string name="preview_audio">Preview</string>
     <string name="upload_music">Upload music</string>
     <string name="uploading">Uploading...</string>
     <string name="upload_success">Upload successful</string>
@@ -488,6 +557,9 @@
     <string name="music_tags">Tags (separated by commas)</string>
     <string name="music_duration">duration</string>
     <string name="required_field">*Required</string>
+
+    <!-- App Name Display -->
+    <string name="app_name_display">Neko Music</string>
     <string name="optional_field">(optional)</string>
     <string name="please_fill_required_fields">Please fill in the required fields.</string>
     <string name="please_select_audio_file">Please select an audio file</string>
@@ -496,7 +568,7 @@
     <string name="preview">Preview</string>
     <string name="full_lyrics">Full Lyrics</string>
     <string name="parsing_metadata">Parsing music information...</string>
-    <string name="please_select_language">Please select</string>
+    <string name="please_select_language">Please select song language</string>
     <string name="language_chinese">Chinese</string>
     <string name="language_cantonese">Cantonese</string>
     <string name="language_shanghainese">Shanghainese</string>
@@ -511,6 +583,6 @@
     <string name="unsupported_audio_format">Unsupported audio formats: Only WAV, FLAC, and MP3 formats are supported.</string>
     <string name="unsupported_lyrics_format">Lyrics files only support LRC format.</string>
     <string name="invalid_lyrics_timestamp">The LRC file must include a timestamp (format: [mm:ss.xx]).</string>
-    <string name="not_required_for_instrumental">Lyrics not required for instrumental music</string>
+
     <string name="desktop_lyric">Desktop lyric</string>
 </resources>
