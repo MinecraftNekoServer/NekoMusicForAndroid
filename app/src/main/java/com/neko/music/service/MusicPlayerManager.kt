@@ -14,6 +14,7 @@ import coil.request.SuccessResult
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.Player
+import com.neko.music.R
 import com.neko.music.data.manager.PlaylistManager
 import com.neko.music.data.model.Music
 import kotlinx.coroutines.CoroutineScope
@@ -549,8 +550,8 @@ class MusicPlayerManager private constructor(context: Context) {
             }
 
             override fun onPlayerError(error: com.google.android.exoplayer2.PlaybackException) {
-                val currentTitle = _currentMusicTitle.value ?: "Unknown"
-                val errorMessage = error.message ?: "Unknown error"
+                val currentTitle = _currentMusicTitle.value ?: appContext.getString(R.string.unknown)
+                val errorMessage = error.message ?: appContext.getString(R.string.unknown_error)
                 
                 // 检查错误类型
                 if (error.errorCode == com.google.android.exoplayer2.PlaybackException.ERROR_CODE_IO_UNSPECIFIED) {

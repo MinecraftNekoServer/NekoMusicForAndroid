@@ -483,6 +483,7 @@
     <!-- 默认值字符串 -->
     <string name="default_unknown_song">不知道名字的歌喵</string>
     <string name="default_no_play">现在安安静静的喵</string>
+    <string name="unknown_error">迷路了喵</string>
     <string name="default_unknown_artist">没留下姓名的歌手喵</string>
 
     <!-- 对话框字符串 -->

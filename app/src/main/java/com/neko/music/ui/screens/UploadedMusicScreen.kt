@@ -98,7 +98,7 @@ fun UploadedMusicScreen(
                 }
             } catch (e: Exception) {
                 showError = true
-                errorMessage = context.getString(R.string.get_data_failed, e.message ?: "Unknown error")
+                errorMessage = context.getString(R.string.get_data_failed, e.message ?: context.getString(R.string.unknown_error))
             } finally {
                 isRefreshing = false
             }
@@ -121,7 +121,7 @@ fun UploadedMusicScreen(
                     }
                 } catch (e: Exception) {
                     showError = true
-                    errorMessage = context.getString(R.string.get_data_failed, e.message ?: "Unknown error")
+                    errorMessage = context.getString(R.string.get_data_failed, e.message ?: context.getString(R.string.unknown_error))
                 } finally {
                     isLoading = false
                 }
@@ -199,7 +199,7 @@ fun UploadedMusicScreen(
                                     }
                                 } catch (e: Exception) {
                                     showError = true
-                                    errorMessage = context.getString(R.string.get_data_failed, e.message ?: "Unknown error")
+                                    errorMessage = context.getString(R.string.get_data_failed, e.message ?: context.getString(R.string.unknown_error))
                                 } finally {
                                     isLoading = false
                                 }
@@ -250,7 +250,7 @@ fun UploadedMusicScreen(
                         }
                     } catch (e: Exception) {
                         showError = true
-                        errorMessage = context.getString(R.string.get_data_failed, e.message ?: "Unknown error")
+                        errorMessage = context.getString(R.string.get_data_failed, e.message ?: context.getString(R.string.unknown_error))
                     } finally {
                         isLoading = false
                     }

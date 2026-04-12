@@ -2,6 +2,7 @@ package com.neko.music.data.cache
 
 import android.content.Context
 import android.util.Log
+import com.neko.music.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -356,7 +357,8 @@ private fun ensureCacheDirs() {
         if (musicDir.exists()) {
             musicDir.listFiles()?.forEach { file ->
                 val musicId = file.nameWithoutExtension.replace("music_", "")
-                val title = prefs.getString("music_${musicId}_title", "Unknown Song") ?: "Unknown Song"
+                val defaultTitle = context.getString(R.string.default_unknown_song)
+                val title = prefs.getString("music_${musicId}_title", defaultTitle) ?: defaultTitle
                 items.add(Pair(musicId, title))
             }
         }

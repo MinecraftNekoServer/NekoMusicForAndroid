@@ -662,12 +662,12 @@ fun PlayerScreen(
                                 Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
                             },
                             onFailure = { error ->
-                                val errorMsg = error.message ?: "Unknown error"
+                                val errorMsg = error.message ?: context.getString(R.string.unknown_error)
                                 Toast.makeText(context, context.getString(R.string.download_failed_format, errorMsg), Toast.LENGTH_SHORT).show()
                             }
                         )
                     } catch (e: Exception) {
-                        val errorMsg = e.message ?: "Unknown error"
+                        val errorMsg = e.message ?: context.getString(R.string.unknown_error)
                         Toast.makeText(context, "下载失败: $errorMsg", Toast.LENGTH_SHORT).show()
                     }
                 }
@@ -757,7 +757,7 @@ fun PlayerScreen(
                         }
                     } catch (e: Exception) {
                         Log.e("PlayerScreen", "添加到歌单失败", e)
-                        val errorMsg = e.message ?: "Unknown error"
+                        val errorMsg = e.message ?: context.getString(R.string.unknown_error)
                         Toast.makeText(context, context.getString(R.string.add_to_playlist_failed, errorMsg), Toast.LENGTH_SHORT).show()
                     }
                 }
@@ -824,7 +824,7 @@ fun PlayerScreen(
                         }
                     } catch (e: Exception) {
                         Log.e("PlayerScreen", "创建歌单失败", e)
-                        val errorMsg = e.message ?: "Unknown error"
+                        val errorMsg = e.message ?: context.getString(R.string.unknown_error)
                         Toast.makeText(context, context.getString(R.string.create_playlist_failed, errorMsg), Toast.LENGTH_SHORT).show()
                     }
                 }
