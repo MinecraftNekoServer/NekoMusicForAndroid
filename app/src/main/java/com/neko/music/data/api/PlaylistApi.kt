@@ -123,6 +123,9 @@ class PlaylistApi(private val token: String?, private val context: android.conte
                 app.setCachedCookie(newCookie)
             }
             return newCookie
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            // 协程被取消，不打印错误日志
+            return null
         } catch (e: Exception) {
             Log.e("PlaylistApi", "获取 ACW Cookie 失败", e)
             return null

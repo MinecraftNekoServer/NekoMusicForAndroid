@@ -77,6 +77,9 @@ class MusicApi(private val context: Context) {
                 app.setCachedCookie(newCookie)
             }
             return newCookie
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            // 协程被取消，不打印错误日志
+            return null
         } catch (e: Exception) {
             Log.e("MusicApi", "获取 ACW Cookie 失败", e)
             return null

@@ -62,6 +62,9 @@ class UserApi(
                 app.setCachedCookie(newCookie)
             }
             return newCookie
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            // 协程被取消，不打印错误日志
+            return null
         } catch (e: Exception) {
             android.util.Log.e("UserApi", "获取 ACW Cookie 失败", e)
             return null
@@ -276,6 +279,15 @@ class UserApi(
                     total = 0
                 )
             }
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            // 协程被取消，不打印错误日志
+            UploadedMusicResponse(
+                success = false,
+                message = "操作已取消",
+                userId = -1,
+                musicList = emptyList(),
+                total = 0
+            )
         } catch (e: Exception) {
             Log.e("UserApi", "获取上传音乐失败", e)
             UploadedMusicResponse(
