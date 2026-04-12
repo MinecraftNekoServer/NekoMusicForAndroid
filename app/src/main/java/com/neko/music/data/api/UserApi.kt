@@ -146,6 +146,42 @@ class UserApi(
     }
     
     /**
+     * 发送忘记密码验证码
+     */
+    suspend fun sendForgotPasswordCode(email: String): VerificationResponse {
+        return try {
+            val response = client.post("$baseUrl/api/user/forgot-password/send-code") {
+                contentType(ContentType.Application.Json)
+                setBody(mapOf("email" to email))
+            }
+            response.body()
+        } catch (e: Exception) {
+            Log.e("UserApi", "发送忘记密码验证码失败", e)
+            VerificationResponse(success = false, message = "网络错误: ${e.message}", data = null)
+        }
+    }
+    
+    /**
+     * 重置密码
+     */
+    suspend fun resetPassword(email: String, code: String, newPassword: String): ResetPasswordResponse {
+        return try {
+            val response = client.post("$baseUrl/api/user/forgot-password") {
+                contentType(ContentType.Application.Json)
+                setBody(ResetPasswordRequest(
+                    email = email,
+                    code = code,
+                    newPassword = newPassword
+                ))
+            }
+            response.body()
+        } catch (e: Exception) {
+            Log.e("UserApi", "重置密码失败", e)
+            ResetPasswordResponse(success = false, message = "网络错误: ${e.message}")
+        }
+    }
+    
+    /**
      * 更换头像
      */
     suspend fun updateAvatar(imageData: ByteArray): UpdateAvatarResponse {
@@ -410,6 +446,19 @@ data class VerificationResponse(
 data class UpdatePasswordRequest(
     val oldPassword: String,
     val newPassword: String
+)
+
+@Serializable
+data class ResetPasswordRequest(
+    val email: String,
+    val code: String,
+    val newPassword: String
+)
+
+@Serializable
+data class ResetPasswordResponse(
+    val success: Boolean,
+    val message: String
 )
 
 @Serializable

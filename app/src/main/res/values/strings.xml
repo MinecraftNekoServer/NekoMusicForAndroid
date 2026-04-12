@@ -104,6 +104,17 @@
     <string name="password">暗号喵</string>
     <string name="username">名字喵</string>
     <string name="confirm_password">再确认一遍暗号喵</string>
+    <string name="forgot_password">忘掉暗号了喵</string>
+    <string name="reset_password">找回暗号喵</string>
+    <string name="enter_email">输入邮箱喵</string>
+    <string name="reset_password_email_hint">快输入你的邮箱，猫娘会把重置暗号的验证码发给你喵</string>
+    <string name="send_reset_code">发送验证码喵</string>
+    <string name="new_password_hint">新暗号喵</string>
+    <string name="confirm_new_password_hint">再确认一遍新暗号喵</string>
+    <string name="reset_password_success">暗号修改好了喵</string>
+    <string name="reset_password_failed">修改失败喵: %s</string>
+    <string name="verification_code_sent">验证码已经飞到你的邮箱啦喵</string>
+    <string name="password_modified_login_again">暗号改好了喵，主人快重新登录吧喵</string>
     <string name="verification_code">验证码喵</string>
     <string name="register">办证喵</string>
     <string name="drag_scale_avatar">揉搓一下图片选择头像位置喵</string>
