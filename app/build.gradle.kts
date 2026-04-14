@@ -19,7 +19,7 @@ android {
 
     defaultConfig {
         applicationId = "com.neko.music"
-        minSdk = 23
+        minSdk = 24
         targetSdk = 36
         versionCode = 43
         versionName = "20260413"
@@ -184,9 +184,10 @@ dependencies {
 
     implementation(libs.androidx.navigation.compose)
 
-    // 暂时注释掉VR SDK依赖以解决minSdk版本冲突
-    // 未来需要升级minSdk到24或使用兼容的SDK版本
-    // implementation("org.khronos.openxr:openxr_loader_for_android:1.0.26")
+    // OpenXR VR SDK - 现在minSdk已升级到24，可以使用
+    implementation("org.khronos.openxr:openxr_loader_for_android:1.0.26")
+    
+    // Google VR库 - 备选方案
     // implementation("com.google.gvr:base:1.190.0")
     // implementation("com.google.gvr:panowidget:1.190.0")
 
