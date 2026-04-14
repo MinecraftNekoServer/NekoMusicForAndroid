@@ -132,6 +132,9 @@ fun SettingsScreen(
 
     // 记录用户是否尝试开启灵动岛但被权限阻止
     var pendingFuckChinaOSEnable by remember { mutableStateOf(false) }
+    
+    // 记录用户是否尝试开启VR模式但被权限阻止
+    var pendingVRModeEnable by remember { mutableStateOf(false) }
 
     // 监听应用生命周期，在恢复时重新检查权限并自动启动灵动岛
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -155,6 +158,16 @@ fun SettingsScreen(
                     intent.action = com.neko.music.floatwindow.FuckChinaOSFloatService.ACTION_SHOW
                     context.startService(intent)
                     pendingFuckChinaOSEnable = false
+                }
+                
+                // 如果用户之前尝试开启VR模式但被权限阻止，现在有了权限，自动开启
+                if (pendingVRModeEnable && newPermission && !isVRModeEnabled) {
+                    isVRModeEnabled = true
+                    vrPrefs.edit().putBoolean("vr_mode_enabled", true).apply()
+                    val intent = Intent(context, com.neko.music.desktoplyric.VRHUDService::class.java)
+                    intent.action = com.neko.music.desktoplyric.VRHUDService.ACTION_SHOW
+                    context.startService(intent)
+                    pendingVRModeEnable = false
                 }
             }
         }
@@ -376,17 +389,28 @@ fun SettingsScreen(
                         subtitle = stringResource(id = R.string.vr_mode_subtitle),
                         checked = isVRModeEnabled,
                         onCheckedChange = { enabled ->
-                            isVRModeEnabled = enabled
-                            vrPrefs.edit().putBoolean("vr_mode_enabled", enabled).apply()
-                            
-                            // 控制VR HUD服务
-                            val serviceIntent = Intent(context, com.neko.music.desktoplyric.VRHUDService::class.java)
-                            if (enabled) {
-                                serviceIntent.action = com.neko.music.desktoplyric.VRHUDService.ACTION_SHOW
-                                context.startService(serviceIntent)
+                            // 如果开启但没有权限，先请求权限（开关状态不变，等用户授权后手动开启）
+                            if (enabled && !hasOverlayPermission) {
+                                val intent = Intent(
+                                    Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                                    android.net.Uri.parse("package:${context.packageName}")
+                                )
+                                context.startActivity(intent)
+                                pendingVRModeEnable = true
                             } else {
-                                serviceIntent.action = com.neko.music.desktoplyric.VRHUDService.ACTION_HIDE
-                                context.startService(serviceIntent)
+                                // 有权限或关闭时，直接执行
+                                isVRModeEnabled = enabled
+                                vrPrefs.edit().putBoolean("vr_mode_enabled", enabled).apply()
+                                
+                                // 控制VR HUD服务
+                                val serviceIntent = Intent(context, com.neko.music.desktoplyric.VRHUDService::class.java)
+                                if (enabled) {
+                                    serviceIntent.action = com.neko.music.desktoplyric.VRHUDService.ACTION_SHOW
+                                    context.startService(serviceIntent)
+                                } else {
+                                    serviceIntent.action = com.neko.music.desktoplyric.VRHUDService.ACTION_HIDE
+                                    context.startService(serviceIntent)
+                                }
                             }
                         }
                     )

@@ -181,7 +181,10 @@ class VRHUDService : Service() {
     private fun showLyricView() {
         if (isViewAdded) return
 
-        if (lyricView == null) return
+        if (lyricView == null || windowManager == null) {
+            android.util.Log.e("VRHUDService", "Cannot show VR HUD: view or window manager is null")
+            return
+        }
 
         try {
             val screenWidth = resources.displayMetrics.widthPixels
@@ -223,6 +226,7 @@ class VRHUDService : Service() {
             android.util.Log.d("VRHUDService", "VR HUD view added successfully with head tracking enabled")
         } catch (e: Exception) {
             android.util.Log.e("VRHUDService", "Error showing VR HUD view", e)
+            isViewAdded = false
         }
     }
 
@@ -251,29 +255,40 @@ class VRHUDService : Service() {
      * 根据头显方向更新HUD位置
      */
     private fun updateHeadTrackingPosition() {
-        // 模拟头显方向变化（在实际VR应用中，这些值应该从VR SDK获取）
-        // 这里使用简单的正弦波模拟头部的自然摆动
-        val time = System.currentTimeMillis() / 1000.0
-        headRotationY = (kotlin.math.sin(time * 0.5) * 10).toFloat() // 左右摆动
-        headRotationX = (kotlin.math.sin(time * 0.3) * 5).toFloat()   // 上下摆动
+        // 检查视图是否已附加到窗口管理器
+        if (!isViewAdded || lyricView == null || windowManager == null || layoutParams == null) {
+            return
+        }
         
-        // 根据头显方向计算目标位置
-        // 将角度转换为屏幕像素偏移
-        val screenWidth = resources.displayMetrics.widthPixels
-        val screenHeight = resources.displayMetrics.heightPixels
-        
-        targetX = (screenWidth * 0.5 + (headRotationY / 90.0f) * screenWidth * 0.3).toFloat()
-        targetY = (screenHeight * 0.5 + (headRotationX / 90.0f) * screenHeight * 0.2).toFloat()
-        
-        // 平滑移动到目标位置
-        currentX = currentX + (targetX - currentX) * smoothingFactor
-        currentY = currentY + (targetY - currentY) * smoothingFactor
-        
-        // 更新视图位置
-        layoutParams?.x = currentX.toInt() - (lyricView?.width?.div(2) ?: 0)
-        layoutParams?.y = currentY.toInt() - (lyricView?.height?.div(2) ?: 0)
-        
-        windowManager?.updateViewLayout(lyricView, layoutParams)
+        try {
+            // 模拟头显方向变化（在实际VR应用中，这些值应该从VR SDK获取）
+            // 这里使用简单的正弦波模拟头部的自然摆动
+            val time = System.currentTimeMillis() / 1000.0
+            headRotationY = (kotlin.math.sin(time * 0.5) * 10).toFloat() // 左右摆动
+            headRotationX = (kotlin.math.sin(time * 0.3) * 5).toFloat()   // 上下摆动
+            
+            // 根据头显方向计算目标位置
+            // 将角度转换为屏幕像素偏移
+            val screenWidth = resources.displayMetrics.widthPixels
+            val screenHeight = resources.displayMetrics.heightPixels
+            
+            targetX = (screenWidth * 0.5 + (headRotationY / 90.0f) * screenWidth * 0.3).toFloat()
+            targetY = (screenHeight * 0.5 + (headRotationX / 90.0f) * screenHeight * 0.2).toFloat()
+            
+            // 平滑移动到目标位置
+            currentX = currentX + (targetX - currentX) * smoothingFactor
+            currentY = currentY + (targetY - currentY) * smoothingFactor
+            
+            // 更新视图位置
+            layoutParams?.x = currentX.toInt() - (lyricView?.width?.div(2) ?: 0)
+            layoutParams?.y = currentY.toInt() - (lyricView?.height?.div(2) ?: 0)
+            
+            windowManager?.updateViewLayout(lyricView, layoutParams)
+        } catch (e: Exception) {
+            android.util.Log.e("VRHUDService", "Error updating head tracking position", e)
+            // 如果更新失败，标记视图为未附加，停止更新
+            isViewAdded = false
+        }
     }
 
     private fun hideLyricView() {
